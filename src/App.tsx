@@ -2,9 +2,19 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/context/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import AppLayout from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminShops from "./pages/admin/Shops";
+import AdminProducts from "./pages/admin/Products";
+import ShopDashboard from "./pages/shop/Dashboard";
+import ShopProducts from "./pages/shop/Products";
+import ShopPricing from "./pages/shop/Pricing";
 
 const queryClient = new QueryClient();
 
@@ -14,11 +24,49 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+
+            {/* Admin Routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout><AdminDashboard /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/shops" element={
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout><AdminShops /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/products" element={
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout><AdminProducts /></AppLayout>
+              </ProtectedRoute>
+            } />
+
+            {/* Shop Routes */}
+            <Route path="/shop" element={
+              <ProtectedRoute requiredRole="shop">
+                <AppLayout><ShopDashboard /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/shop/products" element={
+              <ProtectedRoute requiredRole="shop">
+                <AppLayout><ShopProducts /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/shop/products/:productId/pricing" element={
+              <ProtectedRoute requiredRole="shop">
+                <AppLayout><ShopPricing /></AppLayout>
+              </ProtectedRoute>
+            } />
+
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
