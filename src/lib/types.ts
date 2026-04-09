@@ -47,6 +47,12 @@ export interface ShopProduct {
 
 export type JobStatus = 'pending' | 'in-progress' | 'completed' | 'cancelled';
 
+export interface JobFile {
+  name: string;
+  path: string; // Supabase storage path
+  url: string;  // signed or public URL
+}
+
 export interface Job {
   id: string;
   shopId: string;
@@ -57,6 +63,7 @@ export interface Job {
   totalCost: number;
   status: JobStatus;
   notes: string;
+  files?: JobFile[];
   createdAt: string;
   updatedAt: string;
 }

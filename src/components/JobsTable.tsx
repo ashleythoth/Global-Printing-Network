@@ -3,13 +3,13 @@ import { Trash2 } from 'lucide-react';
 import { Job, JobStatus, PrintShop } from '@/lib/types';
 import { getProductById, getShopById } from '@/lib/store';
 import JobStatusBadge from './JobStatusBadge';
+import JobFilesCell from './JobFilesCell';
 
 const STATUSES: JobStatus[] = ['pending', 'in-progress', 'completed', 'cancelled'];
 
 interface JobsTableProps {
   jobs: Job[];
   showShop?: boolean;
-  /** Pass Supabase-loaded shops so the Shop column resolves correctly */
   supabaseShops?: PrintShop[];
   onStatusChange?: (id: string, status: JobStatus) => void;
   onDelete?: (id: string) => void;
@@ -35,6 +35,7 @@ const JobsTable: React.FC<JobsTableProps> = ({ jobs, showShop = false, supabaseS
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Customer</th>
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Product</th>
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Pages / Copies</th>
+            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Files</th>
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Total</th>
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Status</th>
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Date</th>
@@ -65,6 +66,9 @@ const JobsTable: React.FC<JobsTableProps> = ({ jobs, showShop = false, supabaseS
                 </td>
                 <td className="px-6 py-4 text-gray-600">
                   {job.pages} pg × {job.copies}
+                </td>
+                <td className="px-6 py-4">
+                  <JobFilesCell files={job.files ?? []} />
                 </td>
                 <td className="px-6 py-4 font-semibold text-[#1E293B]">
                   ${job.totalCost.toFixed(2)}

@@ -120,6 +120,7 @@ const SEED_JOBS: Job[] = [
     totalCost: 13.50,
     status: 'completed',
     notes: 'Double-sided, stapled',
+    files: [],
     createdAt: '2024-05-01T09:00:00Z',
     updatedAt: '2024-05-01T11:30:00Z',
   },
@@ -133,6 +134,7 @@ const SEED_JOBS: Job[] = [
     totalCost: 50.00,
     status: 'completed',
     notes: 'Gloss finish',
+    files: [],
     createdAt: '2024-05-03T14:00:00Z',
     updatedAt: '2024-05-03T16:00:00Z',
   },
@@ -146,6 +148,7 @@ const SEED_JOBS: Job[] = [
     totalCost: 36.00,
     status: 'in-progress',
     notes: 'Urgent order',
+    files: [],
     createdAt: '2024-05-10T08:00:00Z',
     updatedAt: '2024-05-10T08:00:00Z',
   },
@@ -159,6 +162,7 @@ const SEED_JOBS: Job[] = [
     totalCost: 87.50,
     status: 'pending',
     notes: 'Matte finish, rounded corners',
+    files: [],
     createdAt: '2024-05-11T10:00:00Z',
     updatedAt: '2024-05-11T10:00:00Z',
   },
@@ -172,6 +176,7 @@ const SEED_JOBS: Job[] = [
     totalCost: 22.50,
     status: 'pending',
     notes: '',
+    files: [],
     createdAt: '2024-05-12T13:00:00Z',
     updatedAt: '2024-05-12T13:00:00Z',
   },
@@ -185,6 +190,7 @@ const SEED_JOBS: Job[] = [
     totalCost: 120.00,
     status: 'completed',
     notes: '3m x 1m banner',
+    files: [],
     createdAt: '2024-05-05T09:00:00Z',
     updatedAt: '2024-05-05T15:00:00Z',
   },
@@ -198,6 +204,7 @@ const SEED_JOBS: Job[] = [
     totalCost: 75.00,
     status: 'pending',
     notes: 'Event banner for Saturday',
+    files: [],
     createdAt: '2024-05-12T11:00:00Z',
     updatedAt: '2024-05-12T11:00:00Z',
   },
@@ -339,6 +346,13 @@ export const createJob = (job: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>): Job
 export const updateJobStatus = (id: string, status: JobStatus): void => {
   const jobs = getJobs().map(j =>
     j.id === id ? { ...j, status, updatedAt: new Date().toISOString() } : j
+  );
+  setItem(KEYS.JOBS, jobs);
+};
+
+export const updateJob = (id: string, updates: Partial<Job>): void => {
+  const jobs = getJobs().map(j =>
+    j.id === id ? { ...j, ...updates, updatedAt: new Date().toISOString() } : j
   );
   setItem(KEYS.JOBS, jobs);
 };

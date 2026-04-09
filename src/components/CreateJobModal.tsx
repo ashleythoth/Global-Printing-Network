@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
-import { Product, ShopProduct, PricingTier } from '@/lib/types';
+import React, { useState, useRef } from 'react';
+import { X, Upload, FileText, Image, Trash2, Loader2, Paperclip } from 'lucide-react';
+import { Product, ShopProduct, PricingTier, JobFile } from '@/lib/types';
 import { createJob } from '@/lib/store';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CreateJobModalProps {
   shopId: string;
@@ -26,6 +27,16 @@ function calcCost(pages: number, tiers: PricingTier[]): number {
   return total;
 }
 
+function fileIcon(name: string) {
+  const ext = name.split('.').pop()?.toLowerCase();
+  if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext ?? '')) {
+    return <Image size={14} className="text-blue-500" />;
+  }
+  return <FileText size={14} className="text-orange-500" />;
+}
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
 const CreateJobModal: React.FC<CreateJobModalProps> = ({ shopId, products, shopProducts, onClose, onCreated }) => {
   const enabledProducts = products.filter(p => {
     const sp = shopProducts.find(s => s.productId === p.id);
@@ -40,11 +51,31 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({ shopId, products, shopP
     notes: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedProduct = products.find(p => p.id === form.productId);
   const selectedSP = shopProducts.find(sp => sp.productId === form.productId);
   const costPerCopy = selectedSP ? calcCost(form.pages, selectedSP.pricingTiers) : 0;
   const totalCost = costPerCopy * form.copies;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    const valid = files.filter(f => {
+      if (f.size > MAX_FILE_SIZE) {
+        setErrors(prev => ({ ...prev, files: `"${f.name}" exceeds 50MB limit.` }));
+        return false;
+      }
+      return true;
+    });
+    setSelectedFiles(prev => [...prev, ...valid]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeFile = (idx: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
+  };
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -57,10 +88,36 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({ shopId, products, shopP
     return e;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
+
+    setUploading(true);
+    const uploadedFiles: JobFile[] = [];
+
+    for (const file of selectedFiles) {
+      const path = `${shopId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+      const { error: uploadError } = await supabase.storage
+        .from('job-files')
+        .upload(path, file);
+
+      if (uploadError) {
+        setErrors(prev => ({ ...prev, files: `Failed to upload "${file.name}": ${uploadError.message}` }));
+        setUploading(false);
+        return;
+      }
+
+      const { data: signedData } = await supabase.storage
+        .from('job-files')
+        .createSignedUrl(path, 60 * 60 * 24 * 7); // 7 days
+
+      uploadedFiles.push({
+        name: file.name,
+        path,
+        url: signedData?.signedUrl ?? '',
+      });
+    }
 
     createJob({
       shopId,
@@ -71,7 +128,10 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({ shopId, products, shopP
       totalCost,
       status: 'pending',
       notes: form.notes,
+      files: uploadedFiles,
     });
+
+    setUploading(false);
     onCreated();
     onClose();
   };
@@ -157,6 +217,51 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({ shopId, products, shopP
               />
             </div>
 
+            {/* File Upload */}
+            <div>
+              <label className="block text-sm font-medium text-[#1E293B] mb-1.5">
+                Files <span className="text-gray-400 font-normal">(PDF, Word, images — max 50MB each)</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 hover:border-[#2563EB] hover:bg-blue-50/40 text-gray-400 hover:text-[#2563EB] rounded-xl py-3 text-sm font-medium transition-all"
+              >
+                <Upload size={16} />
+                Click to attach files
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.gif"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              {errors.files && <p className="text-xs text-[#F43F5E] mt-1">{errors.files}</p>}
+
+              {selectedFiles.length > 0 && (
+                <ul className="mt-2 space-y-1.5">
+                  {selectedFiles.map((file, idx) => (
+                    <li key={idx} className="flex items-center gap-2 bg-[#F8FAFC] rounded-lg px-3 py-2 text-sm">
+                      {fileIcon(file.name)}
+                      <span className="flex-1 truncate text-[#1E293B]">{file.name}</span>
+                      <span className="text-xs text-gray-400 shrink-0">{(file.size / 1024).toFixed(0)} KB</span>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(idx)}
+                        className="text-gray-300 hover:text-[#F43F5E] transition-colors"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             {/* Cost preview */}
             <div className="bg-[#F8FAFC] rounded-xl px-4 py-3 flex items-center justify-between">
               <span className="text-sm text-gray-500">Estimated Total</span>
@@ -167,15 +272,24 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({ shopId, products, shopP
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+                disabled={uploading}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-semibold transition-colors"
+                disabled={uploading}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Create Job
+                {uploading ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" />
+                    Uploading…
+                  </>
+                ) : (
+                  'Create Job'
+                )}
               </button>
             </div>
           </form>
