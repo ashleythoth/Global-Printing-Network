@@ -44,3 +44,19 @@ export interface ShopProduct {
   isEnabled: boolean;
   pricingTiers: PricingTier[];
 }
+
+export type JobStatus = 'pending' | 'in-progress' | 'completed' | 'cancelled';
+
+export interface Job {
+  id: string;
+  shopId: string;
+  productId: string;
+  customerName: string;
+  pages: number;
+  copies: number;
+  totalCost: number;
+  status: JobStatus;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -1,10 +1,11 @@
-import { User, PrintShop, Product, ShopProduct } from './types';
+import { User, PrintShop, Product, ShopProduct, Job, JobStatus } from './types';
 
 const KEYS = {
   USERS: 'printhub_users',
   SHOPS: 'printhub_shops',
   PRODUCTS: 'printhub_products',
   SHOP_PRODUCTS: 'printhub_shop_products',
+  JOBS: 'printhub_jobs',
 };
 
 const SEED_USERS: User[] = [
@@ -108,6 +109,100 @@ const SEED_SHOP_PRODUCTS: ShopProduct[] = [
   },
 ];
 
+const SEED_JOBS: Job[] = [
+  {
+    id: 'j1',
+    shopId: 's1',
+    productId: 'p1',
+    customerName: 'Alice Johnson',
+    pages: 45,
+    copies: 2,
+    totalCost: 13.50,
+    status: 'completed',
+    notes: 'Double-sided, stapled',
+    createdAt: '2024-05-01T09:00:00Z',
+    updatedAt: '2024-05-01T11:30:00Z',
+  },
+  {
+    id: 'j2',
+    shopId: 's1',
+    productId: 'p2',
+    customerName: 'Bob Martinez',
+    pages: 100,
+    copies: 1,
+    totalCost: 50.00,
+    status: 'completed',
+    notes: 'Gloss finish',
+    createdAt: '2024-05-03T14:00:00Z',
+    updatedAt: '2024-05-03T16:00:00Z',
+  },
+  {
+    id: 'j3',
+    shopId: 's1',
+    productId: 'p1',
+    customerName: 'Carol White',
+    pages: 120,
+    copies: 3,
+    totalCost: 36.00,
+    status: 'in-progress',
+    notes: 'Urgent order',
+    createdAt: '2024-05-10T08:00:00Z',
+    updatedAt: '2024-05-10T08:00:00Z',
+  },
+  {
+    id: 'j4',
+    shopId: 's1',
+    productId: 'p2',
+    customerName: 'David Lee',
+    pages: 250,
+    copies: 1,
+    totalCost: 87.50,
+    status: 'pending',
+    notes: 'Matte finish, rounded corners',
+    createdAt: '2024-05-11T10:00:00Z',
+    updatedAt: '2024-05-11T10:00:00Z',
+  },
+  {
+    id: 'j5',
+    shopId: 's1',
+    productId: 'p1',
+    customerName: 'Eva Chen',
+    pages: 30,
+    copies: 5,
+    totalCost: 22.50,
+    status: 'pending',
+    notes: '',
+    createdAt: '2024-05-12T13:00:00Z',
+    updatedAt: '2024-05-12T13:00:00Z',
+  },
+  {
+    id: 'j6',
+    shopId: 's2',
+    productId: 'p3',
+    customerName: 'Frank Nguyen',
+    pages: 5,
+    copies: 2,
+    totalCost: 120.00,
+    status: 'completed',
+    notes: '3m x 1m banner',
+    createdAt: '2024-05-05T09:00:00Z',
+    updatedAt: '2024-05-05T15:00:00Z',
+  },
+  {
+    id: 'j7',
+    shopId: 's2',
+    productId: 'p3',
+    customerName: 'Grace Kim',
+    pages: 3,
+    copies: 1,
+    totalCost: 75.00,
+    status: 'pending',
+    notes: 'Event banner for Saturday',
+    createdAt: '2024-05-12T11:00:00Z',
+    updatedAt: '2024-05-12T11:00:00Z',
+  },
+];
+
 function getItem<T>(key: string): T[] {
   const raw = localStorage.getItem(key);
   if (!raw) return [];
@@ -123,6 +218,7 @@ function seedIfEmpty(): void {
   if (!localStorage.getItem(KEYS.SHOPS)) setItem(KEYS.SHOPS, SEED_SHOPS);
   if (!localStorage.getItem(KEYS.PRODUCTS)) setItem(KEYS.PRODUCTS, SEED_PRODUCTS);
   if (!localStorage.getItem(KEYS.SHOP_PRODUCTS)) setItem(KEYS.SHOP_PRODUCTS, SEED_SHOP_PRODUCTS);
+  if (!localStorage.getItem(KEYS.JOBS)) setItem(KEYS.JOBS, SEED_JOBS);
 }
 
 seedIfEmpty();
@@ -219,4 +315,34 @@ export const upsertShopProduct = (shopId: string, productId: string, updates: Pa
     };
     setItem(KEYS.SHOP_PRODUCTS, [...all, newSP]);
   }
+};
+
+// Jobs
+export const getJobs = (): Job[] => getItem<Job>(KEYS.JOBS);
+
+export const getJobsByShopId = (shopId: string): Job[] =>
+  getJobs().filter(j => j.shopId === shopId);
+
+export const createJob = (job: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>): Job => {
+  const jobs = getJobs();
+  const now = new Date().toISOString();
+  const newJob: Job = {
+    ...job,
+    id: `j${Date.now()}`,
+    createdAt: now,
+    updatedAt: now,
+  };
+  setItem(KEYS.JOBS, [...jobs, newJob]);
+  return newJob;
+};
+
+export const updateJobStatus = (id: string, status: JobStatus): void => {
+  const jobs = getJobs().map(j =>
+    j.id === id ? { ...j, status, updatedAt: new Date().toISOString() } : j
+  );
+  setItem(KEYS.JOBS, jobs);
+};
+
+export const deleteJob = (id: string): void => {
+  setItem(KEYS.JOBS, getJobs().filter(j => j.id !== id));
 };
