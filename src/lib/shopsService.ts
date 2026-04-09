@@ -25,7 +25,8 @@ export async function fetchShops(): Promise<PrintShop[]> {
 }
 
 export async function insertShop(
-  shop: Omit<PrintShop, 'id' | 'createdAt'>
+  shop: Omit<PrintShop, 'id' | 'createdAt'>,
+  password: string
 ): Promise<PrintShop> {
   const { data, error } = await supabase
     .from('print_shops')
@@ -40,7 +41,18 @@ export async function insertShop(
     .single();
 
   if (error) throw error;
-  return rowToShop(data);
+  const newShop = rowToShop(data);
+
+  // Send welcome email — fire and don't block on failure
+  try {
+    await supabase.functions.invoke('send-welcome-email', {
+      body: { shopName: newShop.name, email: newShop.email, password },
+    });
+  } catch (emailErr) {
+    console.warn('Welcome email could not be sent:', emailErr);
+  }
+
+  return newShop;
 }
 
 export async function patchShop(

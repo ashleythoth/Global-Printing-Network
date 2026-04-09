@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Edit2, PowerOff, Power, Trash2, X, Store, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, PowerOff, Power, Trash2, X, Store, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { PrintShop } from '@/lib/types';
 import { fetchShops, insertShop, patchShop, removeShop } from '@/lib/shopsService';
 
-const emptyForm = { name: '', email: '', phone: '', address: '' };
+const emptyForm = { name: '', email: '', phone: '', address: '', password: '' };
 
 const AdminShops: React.FC = () => {
   const [shops, setShops] = useState<PrintShop[]>([]);
@@ -15,6 +15,7 @@ const AdminShops: React.FC = () => {
   const [editShop, setEditShop] = useState<PrintShop | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -39,7 +40,7 @@ const AdminShops: React.FC = () => {
 
   const openEdit = (shop: PrintShop) => {
     setEditShop(shop);
-    setForm({ name: shop.name, email: shop.email, phone: shop.phone, address: shop.address });
+    setForm({ name: shop.name, email: shop.email, phone: shop.phone, address: shop.address, password: '' });
     setFormErrors({});
     setModalOpen(true);
   };
@@ -50,6 +51,8 @@ const AdminShops: React.FC = () => {
     if (!form.email.trim()) e.email = 'Email is required';
     if (!form.phone.trim()) e.phone = 'Phone is required';
     if (!form.address.trim()) e.address = 'Address is required';
+    if (!editShop && !form.password.trim()) e.password = 'Password is required';
+    if (!editShop && form.password.length > 0 && form.password.length < 8) e.password = 'Password must be at least 8 characters';
     return e;
   };
 
@@ -73,7 +76,7 @@ const AdminShops: React.FC = () => {
           phone: form.phone,
           address: form.address,
           status: 'active',
-        });
+        }, form.password);
       }
       await load();
       setModalOpen(false);
@@ -257,6 +260,29 @@ const AdminShops: React.FC = () => {
                   {formErrors[field] && <p className="text-xs text-[#F43F5E] mt-1">{formErrors[field]}</p>}
                 </div>
               ))}
+
+              {!editShop && (
+                <div>
+                  <label className="block text-sm font-medium text-[#1E293B] mb-1.5">Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={form.password}
+                      onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                      placeholder="Min. 8 characters"
+                      className="w-full px-4 py-2.5 pr-11 rounded-xl border border-gray-200 text-[#1E293B] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  {formErrors.password && <p className="text-xs text-[#F43F5E] mt-1">{formErrors.password}</p>}
+                </div>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <button
