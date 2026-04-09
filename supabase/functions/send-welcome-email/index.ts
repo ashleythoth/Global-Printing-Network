@@ -83,7 +83,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'PrintHub <onboarding@resend.dev>',
+        from: 'PrintHub <noreply@printing24-7.com>',
         to: [email],
         subject: `Welcome to PrintHub — Your shop account is ready`,
         html,
