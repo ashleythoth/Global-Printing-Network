@@ -28,6 +28,10 @@ serve(async (req) => {
 
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
+    console.log('[send-welcome-email] RESEND_API_KEY present:', !!RESEND_API_KEY);
+    console.log('[send-welcome-email] RESEND_API_KEY length:', RESEND_API_KEY?.length ?? 0);
+    console.log('[send-welcome-email] RESEND_API_KEY prefix:', RESEND_API_KEY?.substring(0, 6) ?? 'none');
+
     if (!RESEND_API_KEY) {
       console.error('[send-welcome-email] RESEND_API_KEY secret is not set');
       return new Response(
