@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, DollarSign, CheckCircle, ArrowRight, Plus, Clock, Briefcase } from 'lucide-react';
+import { Package, DollarSign, CheckCircle, ArrowRight, Plus, Clock, Briefcase, Download } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
   getProducts,
@@ -13,6 +13,7 @@ import {
 import { JobStatus } from '@/lib/types';
 import JobsTable from '@/components/JobsTable';
 import CreateJobModal from '@/components/CreateJobModal';
+import { exportJobsToCsv } from '@/lib/exportCsv';
 
 const ShopDashboard: React.FC = () => {
   const { currentUser } = useAuth();
@@ -29,7 +30,6 @@ const ShopDashboard: React.FC = () => {
 
   const enabledCount = shopProducts.filter(sp => sp.isEnabled).length;
   const configuredCount = shopProducts.filter(sp => sp.isEnabled && sp.pricingTiers.length > 0).length;
-  const availableCount = allProducts.filter(p => p.isActive).length;
 
   const pendingJobs = jobs.filter(j => j.status === 'pending' || j.status === 'in-progress');
   const displayedJobs = activeTab === 'pending' ? pendingJobs : jobs;
@@ -50,6 +50,15 @@ const ShopDashboard: React.FC = () => {
       deleteJob(id);
       refreshJobs();
     }
+  };
+
+  const handleExport = () => {
+    const jobsToExport = activeTab === 'pending' ? pendingJobs : jobs;
+    exportJobsToCsv(
+      jobsToExport.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+      allProducts,
+      shop?.name ?? 'Shop'
+    );
   };
 
   return (
@@ -111,7 +120,7 @@ const ShopDashboard: React.FC = () => {
 
       {/* Jobs Section */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-1 bg-[#F8FAFC] rounded-xl p-1">
             <button
               onClick={() => setActiveTab('pending')}
@@ -139,12 +148,23 @@ const ShopDashboard: React.FC = () => {
               All Jobs
             </button>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:text-[#1d4ed8] transition-colors"
-          >
-            <Plus size={14} /> Add Job
-          </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleExport}
+              disabled={displayedJobs.length === 0}
+              className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-[#1E293B] border border-gray-200 hover:border-gray-300 px-3 py-1.5 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Download size={14} />
+              Export CSV
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:text-[#1d4ed8] transition-colors"
+            >
+              <Plus size={14} /> Add Job
+            </button>
+          </div>
         </div>
 
         <JobsTable
