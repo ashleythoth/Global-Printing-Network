@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, Package, CheckCircle, TrendingUp, ArrowRight, Briefcase, DollarSign, Clock } from 'lucide-react';
-import { getShops, getProducts, getJobs, updateJobStatus, deleteJob } from '@/lib/store';
-import { JobStatus } from '@/lib/types';
+import { Store, Package, ArrowRight, DollarSign, Clock } from 'lucide-react';
+import { getProducts, getJobs, updateJobStatus, deleteJob } from '@/lib/store';
+import { fetchShops } from '@/lib/shopsService';
+import { PrintShop, JobStatus } from '@/lib/types';
 import JobsTable from '@/components/JobsTable';
 
 const StatCard: React.FC<{
@@ -22,16 +23,19 @@ const StatCard: React.FC<{
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const shops = getShops();
+  const [shops, setShops] = useState<PrintShop[]>([]);
   const products = getProducts();
   const [jobs, setJobs] = useState(() => getJobs());
   const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
+
+  useEffect(() => {
+    fetchShops().then(setShops).catch(() => {});
+  }, []);
 
   const activeShops = shops.filter(s => s.status === 'active').length;
   const activeProducts = products.filter(p => p.isActive).length;
   const pendingJobs = jobs.filter(j => j.status === 'pending' || j.status === 'in-progress');
   const totalRevenue = jobs.filter(j => j.status === 'completed').reduce((s, j) => s + j.totalCost, 0);
-
   const displayedJobs = activeTab === 'pending' ? pendingJobs : jobs;
 
   const refreshJobs = () => setJobs(getJobs());
@@ -119,6 +123,7 @@ const AdminDashboard: React.FC = () => {
         <JobsTable
           jobs={displayedJobs.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())}
           showShop
+          supabaseShops={shops}
           onStatusChange={handleStatusChange}
           onDelete={handleDelete}
         />

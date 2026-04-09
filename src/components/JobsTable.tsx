@@ -1,6 +1,6 @@
 import React from 'react';
-import { Trash2, ChevronDown } from 'lucide-react';
-import { Job, JobStatus } from '@/lib/types';
+import { Trash2 } from 'lucide-react';
+import { Job, JobStatus, PrintShop } from '@/lib/types';
 import { getProductById, getShopById } from '@/lib/store';
 import JobStatusBadge from './JobStatusBadge';
 
@@ -9,11 +9,13 @@ const STATUSES: JobStatus[] = ['pending', 'in-progress', 'completed', 'cancelled
 interface JobsTableProps {
   jobs: Job[];
   showShop?: boolean;
+  /** Pass Supabase-loaded shops so the Shop column resolves correctly */
+  supabaseShops?: PrintShop[];
   onStatusChange?: (id: string, status: JobStatus) => void;
   onDelete?: (id: string) => void;
 }
 
-const JobsTable: React.FC<JobsTableProps> = ({ jobs, showShop = false, onStatusChange, onDelete }) => {
+const JobsTable: React.FC<JobsTableProps> = ({ jobs, showShop = false, supabaseShops, onStatusChange, onDelete }) => {
   if (jobs.length === 0) {
     return (
       <div className="px-6 py-12 text-center text-gray-400 text-sm">
@@ -44,7 +46,9 @@ const JobsTable: React.FC<JobsTableProps> = ({ jobs, showShop = false, onStatusC
         <tbody className="divide-y divide-gray-50">
           {jobs.map(job => {
             const product = getProductById(job.productId);
-            const shop = showShop ? getShopById(job.shopId) : null;
+            const shop = showShop
+              ? (supabaseShops?.find(s => s.id === job.shopId) ?? getShopById(job.shopId))
+              : null;
             return (
               <tr key={job.id} className="hover:bg-[#F8FAFC] transition-colors">
                 {showShop && (
