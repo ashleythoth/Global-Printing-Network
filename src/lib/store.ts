@@ -36,11 +36,14 @@ const SEED_SHOPS: PrintShop[] = [
 ];
 
 const SEED_PRODUCTS: Product[] = [
+  // ── Documents ──────────────────────────────────────────────────────────────
   {
     id: 'p1',
-    name: 'Standard Document Print',
-    description: 'Black & white document printing on standard 80gsm paper.',
-    category: 'documents',
+    name: 'Black & White Document',
+    description: 'Standard B&W printing for everyday documents, reports, and forms.',
+    printType: 'document',
+    colorModes: ['bw'],
+    sides: ['single', 'double'],
     minPages: 1,
     maxPages: 500,
     isActive: true,
@@ -48,33 +51,58 @@ const SEED_PRODUCTS: Product[] = [
   },
   {
     id: 'p2',
-    name: 'Premium Business Cards',
-    description: 'Full-color business cards on 350gsm matte or gloss stock.',
-    category: 'business-cards',
-    minPages: 50,
-    maxPages: 1000,
+    name: 'Color Document',
+    description: 'Full-color printing for presentations, brochures, and marketing materials.',
+    printType: 'document',
+    colorModes: ['color'],
+    sides: ['single', 'double'],
+    minPages: 1,
+    maxPages: 200,
     isActive: true,
     createdAt: '2024-01-02T00:00:00Z',
   },
   {
     id: 'p3',
-    name: 'Large Format Banner',
-    description: 'Wide-format printing for banners, posters, and signage.',
-    category: 'large-format',
+    name: 'B&W + Color Document',
+    description: 'Flexible document printing — choose B&W or color per order.',
+    printType: 'document',
+    colorModes: ['bw', 'color'],
+    sides: ['single', 'double'],
     minPages: 1,
-    maxPages: 50,
+    maxPages: 300,
     isActive: true,
     createdAt: '2024-01-03T00:00:00Z',
   },
+  // ── Photos ─────────────────────────────────────────────────────────────────
   {
     id: 'p4',
-    name: 'Color Document Print',
-    description: 'Full-color document printing on premium 100gsm paper.',
-    category: 'documents',
-    minPages: 1,
-    maxPages: 200,
+    name: 'Standard Photo Print',
+    description: 'Everyday photo prints in popular sizes. Great for personal and family photos.',
+    printType: 'photo',
+    sizes: ['4x6', '5x7', '8x10'],
+    finishes: ['glossy', 'matte'],
     isActive: true,
     createdAt: '2024-01-04T00:00:00Z',
+  },
+  {
+    id: 'p5',
+    name: 'Premium Photo Print',
+    description: 'High-quality photo prints with premium finish options including lustre and metallic.',
+    printType: 'photo',
+    sizes: ['4x6', '5x7', '8x10', '8x12', '11x14', '16x20'],
+    finishes: ['glossy', 'matte', 'lustre', 'metallic'],
+    isActive: true,
+    createdAt: '2024-01-05T00:00:00Z',
+  },
+  {
+    id: 'p6',
+    name: 'Large Photo Print',
+    description: 'Large-format photo prints for wall art, portraits, and display.',
+    printType: 'photo',
+    sizes: ['12x18', '16x20', '20x24', '20x30'],
+    finishes: ['glossy', 'matte', 'lustre'],
+    isActive: true,
+    createdAt: '2024-01-06T00:00:00Z',
   },
 ];
 
@@ -85,37 +113,31 @@ const SEED_SHOP_PRODUCTS: ShopProduct[] = [
     productId: 'p1',
     isEnabled: true,
     pricingTiers: [
-      { fromPage: 1, toPage: 50, pricePerPage: 0.15 },
-      { fromPage: 51, toPage: 200, pricePerPage: 0.10 },
+      { fromPage: 1, toPage: 50, pricePerPage: 0.12 },
+      { fromPage: 51, toPage: 200, pricePerPage: 0.09 },
       { fromPage: 201, toPage: 500, pricePerPage: 0.07 },
     ],
     paperTypes: [
-      { id: 'pt1', name: 'Standard', description: '80gsm standard copy paper', priceUpcharge: 0 },
-      { id: 'pt2', name: 'Card Stock', description: '200gsm heavy card stock', priceUpcharge: 0.05 },
-      { id: 'pt3', name: 'Gloss', description: '130gsm gloss coated paper', priceUpcharge: 0.08 },
+      { id: 'pt1', name: 'Standard 80gsm', description: 'Standard copy paper', priceUpcharge: 0 },
+      { id: 'pt2', name: 'Premium 100gsm', description: 'Heavier, brighter white', priceUpcharge: 0.02 },
     ],
+    photoPrices: [],
   },
   {
     id: 'sp2',
     shopId: 's1',
-    productId: 'p2',
+    productId: 'p4',
     isEnabled: true,
-    pricingTiers: [
-      { fromPage: 50, toPage: 200, pricePerPage: 0.50 },
-      { fromPage: 201, toPage: 1000, pricePerPage: 0.35 },
-    ],
-    paperTypes: [
-      { id: 'pt4', name: 'Matte', description: '350gsm matte finish', priceUpcharge: 0 },
-      { id: 'pt5', name: 'Gloss', description: '350gsm gloss finish', priceUpcharge: 0.03 },
-    ],
-  },
-  {
-    id: 'sp3',
-    shopId: 's2',
-    productId: 'p1',
-    isEnabled: false,
     pricingTiers: [],
     paperTypes: [],
+    photoPrices: [
+      { size: '4x6', finish: 'glossy', priceEach: 0.29 },
+      { size: '4x6', finish: 'matte', priceEach: 0.35 },
+      { size: '5x7', finish: 'glossy', priceEach: 0.99 },
+      { size: '5x7', finish: 'matte', priceEach: 1.09 },
+      { size: '8x10', finish: 'glossy', priceEach: 2.99 },
+      { size: '8x10', finish: 'matte', priceEach: 3.29 },
+    ],
   },
 ];
 
@@ -127,9 +149,12 @@ const SEED_JOBS: Job[] = [
     customerName: 'Alice Johnson',
     pages: 45,
     copies: 2,
-    totalCost: 13.50,
+    colorMode: 'Black & White',
+    sides: 'Double-sided',
+    paperType: 'Standard 80gsm',
+    totalCost: 10.80,
     status: 'completed',
-    notes: 'Double-sided, stapled',
+    notes: 'Stapled',
     files: [],
     createdAt: '2024-05-01T09:00:00Z',
     updatedAt: '2024-05-01T11:30:00Z',
@@ -137,13 +162,14 @@ const SEED_JOBS: Job[] = [
   {
     id: 'j2',
     shopId: 's1',
-    productId: 'p2',
+    productId: 'p4',
     customerName: 'Bob Martinez',
-    pages: 100,
-    copies: 1,
-    totalCost: 50.00,
+    photoSize: '8x10',
+    photoFinish: 'Glossy',
+    quantity: 3,
+    totalCost: 8.97,
     status: 'completed',
-    notes: 'Gloss finish',
+    notes: '',
     files: [],
     createdAt: '2024-05-03T14:00:00Z',
     updatedAt: '2024-05-03T16:00:00Z',
@@ -154,10 +180,13 @@ const SEED_JOBS: Job[] = [
     productId: 'p1',
     customerName: 'Carol White',
     pages: 120,
-    copies: 3,
-    totalCost: 36.00,
+    copies: 1,
+    colorMode: 'Black & White',
+    sides: 'Single-sided',
+    paperType: 'Premium 100gsm',
+    totalCost: 13.20,
     status: 'in-progress',
-    notes: 'Urgent order',
+    notes: 'Urgent',
     files: [],
     createdAt: '2024-05-10T08:00:00Z',
     updatedAt: '2024-05-10T08:00:00Z',
@@ -165,58 +194,17 @@ const SEED_JOBS: Job[] = [
   {
     id: 'j4',
     shopId: 's1',
-    productId: 'p2',
+    productId: 'p4',
     customerName: 'David Lee',
-    pages: 250,
-    copies: 1,
-    totalCost: 87.50,
+    photoSize: '4x6',
+    photoFinish: 'Matte',
+    quantity: 20,
+    totalCost: 7.00,
     status: 'pending',
-    notes: 'Matte finish, rounded corners',
+    notes: 'Family photos',
     files: [],
     createdAt: '2024-05-11T10:00:00Z',
     updatedAt: '2024-05-11T10:00:00Z',
-  },
-  {
-    id: 'j5',
-    shopId: 's1',
-    productId: 'p1',
-    customerName: 'Eva Chen',
-    pages: 30,
-    copies: 5,
-    totalCost: 22.50,
-    status: 'pending',
-    notes: '',
-    files: [],
-    createdAt: '2024-05-12T13:00:00Z',
-    updatedAt: '2024-05-12T13:00:00Z',
-  },
-  {
-    id: 'j6',
-    shopId: 's2',
-    productId: 'p3',
-    customerName: 'Frank Nguyen',
-    pages: 5,
-    copies: 2,
-    totalCost: 120.00,
-    status: 'completed',
-    notes: '3m x 1m banner',
-    files: [],
-    createdAt: '2024-05-05T09:00:00Z',
-    updatedAt: '2024-05-05T15:00:00Z',
-  },
-  {
-    id: 'j7',
-    shopId: 's2',
-    productId: 'p3',
-    customerName: 'Grace Kim',
-    pages: 3,
-    copies: 1,
-    totalCost: 75.00,
-    status: 'pending',
-    notes: 'Event banner for Saturday',
-    files: [],
-    createdAt: '2024-05-12T11:00:00Z',
-    updatedAt: '2024-05-12T11:00:00Z',
   },
 ];
 
@@ -253,26 +241,15 @@ export const getShopById = (id: string): PrintShop | undefined =>
 export const createShop = (shop: Omit<PrintShop, 'id' | 'createdAt'>, userPassword: string): PrintShop => {
   const shops = getShops();
   const users = getUsers();
-  const newShop: PrintShop = {
-    ...shop,
-    id: `s${Date.now()}`,
-    createdAt: new Date().toISOString(),
-  };
-  const newUser: User = {
-    id: `u${Date.now()}`,
-    email: shop.email,
-    password: userPassword,
-    role: 'shop',
-    shopId: newShop.id,
-  };
+  const newShop: PrintShop = { ...shop, id: `s${Date.now()}`, createdAt: new Date().toISOString() };
+  const newUser: User = { id: `u${Date.now()}`, email: shop.email, password: userPassword, role: 'shop', shopId: newShop.id };
   setItem(KEYS.SHOPS, [...shops, newShop]);
   setItem(KEYS.USERS, [...users, newUser]);
   return newShop;
 };
 
 export const updateShop = (id: string, updates: Partial<PrintShop>): void => {
-  const shops = getShops().map(s => s.id === id ? { ...s, ...updates } : s);
-  setItem(KEYS.SHOPS, shops);
+  setItem(KEYS.SHOPS, getShops().map(s => s.id === id ? { ...s, ...updates } : s));
 };
 
 export const deleteShop = (id: string): void => {
@@ -285,19 +262,13 @@ export const getProductById = (id: string): Product | undefined =>
   getProducts().find(p => p.id === id);
 
 export const createProduct = (product: Omit<Product, 'id' | 'createdAt'>): Product => {
-  const products = getProducts();
-  const newProduct: Product = {
-    ...product,
-    id: `p${Date.now()}`,
-    createdAt: new Date().toISOString(),
-  };
-  setItem(KEYS.PRODUCTS, [...products, newProduct]);
+  const newProduct: Product = { ...product, id: `p${Date.now()}`, createdAt: new Date().toISOString() };
+  setItem(KEYS.PRODUCTS, [...getProducts(), newProduct]);
   return newProduct;
 };
 
 export const updateProduct = (id: string, updates: Partial<Product>): void => {
-  const products = getProducts().map(p => p.id === id ? { ...p, ...updates } : p);
-  setItem(KEYS.PRODUCTS, products);
+  setItem(KEYS.PRODUCTS, getProducts().map(p => p.id === id ? { ...p, ...updates } : p));
 };
 
 export const deleteProduct = (id: string): void => {
@@ -322,16 +293,11 @@ export const upsertShopProduct = (shopId: string, productId: string, updates: Pa
       sp.shopId === shopId && sp.productId === productId ? { ...sp, ...updates } : sp
     ));
   } else {
-    const newSP: ShopProduct = {
-      id: `sp${Date.now()}`,
-      shopId,
-      productId,
-      isEnabled: false,
-      pricingTiers: [],
-      paperTypes: [],
+    setItem(KEYS.SHOP_PRODUCTS, [...all, {
+      id: `sp${Date.now()}`, shopId, productId,
+      isEnabled: false, pricingTiers: [], paperTypes: [], photoPrices: [],
       ...updates,
-    };
-    setItem(KEYS.SHOP_PRODUCTS, [...all, newSP]);
+    }]);
   }
 };
 
@@ -342,30 +308,22 @@ export const getJobsByShopId = (shopId: string): Job[] =>
   getJobs().filter(j => j.shopId === shopId);
 
 export const createJob = (job: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>): Job => {
-  const jobs = getJobs();
   const now = new Date().toISOString();
-  const newJob: Job = {
-    ...job,
-    id: `j${Date.now()}`,
-    createdAt: now,
-    updatedAt: now,
-  };
-  setItem(KEYS.JOBS, [...jobs, newJob]);
+  const newJob: Job = { ...job, id: `j${Date.now()}`, createdAt: now, updatedAt: now };
+  setItem(KEYS.JOBS, [...getJobs(), newJob]);
   return newJob;
 };
 
 export const updateJobStatus = (id: string, status: JobStatus): void => {
-  const jobs = getJobs().map(j =>
+  setItem(KEYS.JOBS, getJobs().map(j =>
     j.id === id ? { ...j, status, updatedAt: new Date().toISOString() } : j
-  );
-  setItem(KEYS.JOBS, jobs);
+  ));
 };
 
 export const updateJob = (id: string, updates: Partial<Job>): void => {
-  const jobs = getJobs().map(j =>
+  setItem(KEYS.JOBS, getJobs().map(j =>
     j.id === id ? { ...j, ...updates, updatedAt: new Date().toISOString() } : j
-  );
-  setItem(KEYS.JOBS, jobs);
+  ));
 };
 
 export const deleteJob = (id: string): void => {

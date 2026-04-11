@@ -219,7 +219,7 @@ const ShopPricing: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {PREVIEW_QUANTITIES.filter(q => q >= product.minPages && q <= product.maxPages).map(qty => {
+              {PREVIEW_QUANTITIES.filter(q => q >= (product.minPages ?? 1) && q <= (product.maxPages ?? 500)).map(qty => {
                 const cost = calcCost(qty, sortedTiers);
                 const rate = cost !== null ? cost / qty : null;
                 return (
