@@ -89,6 +89,11 @@ const SEED_SHOP_PRODUCTS: ShopProduct[] = [
       { fromPage: 51, toPage: 200, pricePerPage: 0.10 },
       { fromPage: 201, toPage: 500, pricePerPage: 0.07 },
     ],
+    paperTypes: [
+      { id: 'pt1', name: 'Standard', description: '80gsm standard copy paper', priceUpcharge: 0 },
+      { id: 'pt2', name: 'Card Stock', description: '200gsm heavy card stock', priceUpcharge: 0.05 },
+      { id: 'pt3', name: 'Gloss', description: '130gsm gloss coated paper', priceUpcharge: 0.08 },
+    ],
   },
   {
     id: 'sp2',
@@ -99,6 +104,10 @@ const SEED_SHOP_PRODUCTS: ShopProduct[] = [
       { fromPage: 50, toPage: 200, pricePerPage: 0.50 },
       { fromPage: 201, toPage: 1000, pricePerPage: 0.35 },
     ],
+    paperTypes: [
+      { id: 'pt4', name: 'Matte', description: '350gsm matte finish', priceUpcharge: 0 },
+      { id: 'pt5', name: 'Gloss', description: '350gsm gloss finish', priceUpcharge: 0.03 },
+    ],
   },
   {
     id: 'sp3',
@@ -106,6 +115,7 @@ const SEED_SHOP_PRODUCTS: ShopProduct[] = [
     productId: 'p1',
     isEnabled: false,
     pricingTiers: [],
+    paperTypes: [],
   },
 ];
 
@@ -318,6 +328,7 @@ export const upsertShopProduct = (shopId: string, productId: string, updates: Pa
       productId,
       isEnabled: false,
       pricingTiers: [],
+      paperTypes: [],
       ...updates,
     };
     setItem(KEYS.SHOP_PRODUCTS, [...all, newSP]);

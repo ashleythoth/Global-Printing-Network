@@ -37,20 +37,28 @@ export interface PricingTier {
   pricePerPage: number;
 }
 
+export interface PaperType {
+  id: string;
+  name: string;           // e.g. "Standard", "Card Stock", "Gloss"
+  description: string;    // e.g. "80gsm standard copy paper"
+  priceUpcharge: number;  // extra $ per page on top of base price
+}
+
 export interface ShopProduct {
   id: string;
   shopId: string;
   productId: string;
   isEnabled: boolean;
   pricingTiers: PricingTier[];
+  paperTypes: PaperType[];
 }
 
 export type JobStatus = 'pending' | 'in-progress' | 'completed' | 'cancelled';
 
 export interface JobFile {
   name: string;
-  path: string; // Supabase storage path
-  url: string;  // signed or public URL
+  path: string;
+  url: string;
 }
 
 export interface Job {
@@ -60,6 +68,8 @@ export interface Job {
   customerName: string;
   pages: number;
   copies: number;
+  paperType?: string;       // name of selected paper type
+  paperUpcharge?: number;   // upcharge per page applied
   totalCost: number;
   status: JobStatus;
   notes: string;

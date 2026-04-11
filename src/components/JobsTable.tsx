@@ -35,6 +35,7 @@ const JobsTable: React.FC<JobsTableProps> = ({ jobs, showShop = false, supabaseS
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Customer</th>
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Product</th>
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Pages / Copies</th>
+            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Paper</th>
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Files</th>
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Total</th>
             <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Status</th>
@@ -66,6 +67,15 @@ const JobsTable: React.FC<JobsTableProps> = ({ jobs, showShop = false, supabaseS
                 </td>
                 <td className="px-6 py-4 text-gray-600">
                   {job.pages} pg × {job.copies}
+                </td>
+                <td className="px-6 py-4">
+                  {job.paperType ? (
+                    <span className="text-xs font-medium bg-[#1E3A5F]/10 text-[#1E3A5F] px-2 py-1 rounded-full">
+                      {job.paperType}
+                    </span>
+                  ) : (
+                    <span className="text-gray-300 text-xs">—</span>
+                  )}
                 </td>
                 <td className="px-6 py-4">
                   <JobFilesCell files={job.files ?? []} />
