@@ -4,14 +4,24 @@ This document describes all demo data seeded into the Supabase database.
 
 ---
 
-## 🏪 Print Shops (4)
+## 🏪 Print Shops (14)
 
-| Name | Email | Phone | Address | Status |
-|------|-------|-------|---------|--------|
-| Quick Print Co. | shop1@printhub.com | +1 (555) 100-2000 | 123 Main St, New York, NY 10001 | ✅ Active |
-| Express Prints LLC | shop2@printhub.com | +1 (555) 300-4000 | 456 Oak Ave, Los Angeles, CA 90001 | ✅ Active |
-| City Copy Center | shop3@printhub.com | +1 (555) 500-6000 | 789 Broadway, Chicago, IL 60601 | ✅ Active |
-| Sunset Print Studio | shop4@printhub.com | +1 (555) 700-8000 | 321 Sunset Blvd, Miami, FL 33101 | ❌ Inactive |
+| # | Name | Email | City | Status |
+|---|------|-------|------|--------|
+| 1 | Quick Print Co. | shop1@printhub.com | New York, NY | ✅ Active |
+| 2 | Express Prints LLC | shop2@printhub.com | Los Angeles, CA | ✅ Active |
+| 3 | City Copy Center | shop3@printhub.com | Chicago, IL | ✅ Active |
+| 4 | Sunset Print Studio | shop4@printhub.com | Miami, FL | ❌ Inactive |
+| 5 | Metro Print Hub | shop5@printhub.com | New York, NY | ✅ Active |
+| 6 | Pacific Print Works | shop6@printhub.com | San Francisco, CA | ✅ Active |
+| 7 | Lone Star Prints | shop7@printhub.com | Austin, TX | ✅ Active |
+| 8 | Emerald City Print Co. | shop8@printhub.com | Seattle, WA | ✅ Active |
+| 9 | Windy City Press | shop9@printhub.com | Chicago, IL | ✅ Active |
+| 10 | Bayou Print Studio | shop10@printhub.com | New Orleans, LA | ✅ Active |
+| 11 | Rocky Mountain Prints | shop11@printhub.com | Denver, CO | ✅ Active |
+| 12 | Peach State Print Co. | shop12@printhub.com | Atlanta, GA | ✅ Active |
+| 13 | Hub Print & Copy | shop13@printhub.com | Boston, MA | ✅ Active |
+| 14 | Desert Sun Prints | shop14@printhub.com | Phoenix, AZ | ❌ Inactive |
 
 ---
 
@@ -36,58 +46,105 @@ This document describes all demo data seeded into the Supabase database.
 ## 🔗 Shop Products & Pricing
 
 ### Quick Print Co.
-| Product | Enabled | Pricing Tiers |
-|---------|---------|---------------|
-| B&W Document | ✅ | 1–50 pages @ $0.12 · 51–200 @ $0.09 · 201–500 @ $0.07 |
-| Color Document | ✅ | 1–50 pages @ $0.45 · 51–200 @ $0.35 |
-| Standard Photo Print | ✅ | 1–25 prints @ $0.35 · 26–100 @ $0.29 · 101+ @ $0.25 |
-| Premium Photo Print | ✅ | 1–25 prints @ $0.99 · 26+ @ $0.79 |
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.12 · 51–200 @ $0.09 · 201–500 @ $0.07 |
+| Color Document | ✅ | 1–50 @ $0.45 · 51–200 @ $0.35 |
+| Standard Photo Print | ✅ | 1–25 @ $0.35 · 26–100 @ $0.29 · 101+ @ $0.25 |
+| Premium Photo Print | ✅ | 1–25 @ $0.99 · 26+ @ $0.79 |
 
 ### Express Prints LLC
-| Product | Enabled | Pricing Tiers |
-|---------|---------|---------------|
-| B&W Document | ✅ | 1–50 pages @ $0.10 · 51–200 @ $0.08 · 201–500 @ $0.06 |
-| B&W + Color Document | ✅ | 1–50 pages @ $0.30 · 51–200 @ $0.22 |
-| Standard Photo Print | ✅ | 1–50 prints @ $0.39 · 51+ @ $0.29 |
-| Large Format Photo Print | ✅ | 1–10 prints @ $8.99 · 11+ @ $6.99 |
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.10 · 51–200 @ $0.08 · 201–500 @ $0.06 |
+| B&W + Color Document | ✅ | 1–50 @ $0.30 · 51–200 @ $0.22 |
+| Standard Photo Print | ✅ | 1–50 @ $0.39 · 51+ @ $0.29 |
+| Large Format Photo Print | ✅ | 1–10 @ $8.99 · 11+ @ $6.99 |
 
 ### City Copy Center
-| Product | Enabled | Pricing Tiers |
-|---------|---------|---------------|
-| B&W Document | ✅ | 1–50 pages @ $0.11 · 51–500 @ $0.08 |
-| Color Document | ✅ | 1–50 pages @ $0.50 · 51–200 @ $0.38 |
-| Standard Photo Print | ❌ (disabled) | — |
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.11 · 51–500 @ $0.08 |
+| Color Document | ✅ | 1–50 @ $0.50 · 51–200 @ $0.38 |
+| Standard Photo Print | ❌ disabled | — |
+
+### Metro Print Hub
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.11 · 51–200 @ $0.08 · 201–500 @ $0.06 |
+| Color Document | ✅ | 1–50 @ $0.42 · 51–200 @ $0.33 |
+| Standard Photo Print | ✅ | 1–25 @ $0.33 · 26+ @ $0.27 |
+| Premium Photo Print | ✅ | 1–25 @ $1.05 · 26+ @ $0.85 |
+
+### Pacific Print Works
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.13 · 51–300 @ $0.10 · 301–500 @ $0.08 |
+| B&W + Color Document | ✅ | 1–50 @ $0.28 · 51–200 @ $0.21 |
+| Premium Photo Print | ✅ | 1–20 @ $1.10 · 21+ @ $0.89 |
+| Large Format Photo Print | ✅ | 1–10 @ $9.50 · 11+ @ $7.50 |
+
+### Lone Star Prints
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.10 · 51–500 @ $0.07 |
+| Color Document | ✅ | 1–50 @ $0.40 · 51–200 @ $0.30 |
+| Standard Photo Print | ✅ | 1–50 @ $0.32 · 51+ @ $0.25 |
+
+### Emerald City Print Co.
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.12 · 51–200 @ $0.09 · 201–500 @ $0.07 |
+| B&W + Color Document | ✅ | 1–50 @ $0.32 · 51–200 @ $0.24 |
+| Premium Photo Print | ✅ | 1–25 @ $0.95 · 26+ @ $0.75 |
+| Large Format Photo Print | ✅ | 1–10 @ $8.50 · 11+ @ $6.50 |
+
+### Windy City Press
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.11 · 51–500 @ $0.08 |
+| Color Document | ✅ | 1–50 @ $0.44 · 51–200 @ $0.34 |
+| Standard Photo Print | ✅ | 1–50 @ $0.36 · 51+ @ $0.28 |
+
+### Bayou Print Studio
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.10 · 51–500 @ $0.07 |
+| Standard Photo Print | ✅ | 1–25 @ $0.34 · 26+ @ $0.27 |
+| Premium Photo Print | ✅ | 1–25 @ $1.00 · 26+ @ $0.80 |
+
+### Rocky Mountain Prints
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.11 · 51–500 @ $0.08 |
+| Color Document | ✅ | 1–50 @ $0.43 · 51–200 @ $0.33 |
+| Large Format Photo Print | ✅ | 1–10 @ $9.00 · 11+ @ $7.00 |
+
+### Peach State Print Co.
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.12 · 51–500 @ $0.09 |
+| B&W + Color Document | ✅ | 1–50 @ $0.31 · 51–200 @ $0.23 |
+| Standard Photo Print | ✅ | 1–50 @ $0.35 · 51+ @ $0.28 |
+
+### Hub Print & Copy
+| Product | Enabled | Pricing |
+|---------|---------|---------|
+| B&W Document | ✅ | 1–50 @ $0.13 · 51–200 @ $0.10 · 201–500 @ $0.08 |
+| Color Document | ✅ | 1–50 @ $0.46 · 51–200 @ $0.36 |
+| Premium Photo Print | ✅ | 1–25 @ $1.02 · 26+ @ $0.82 |
+| Large Format Photo Print | ✅ | 1–10 @ $9.25 · 11+ @ $7.25 |
 
 ---
 
-## 🧾 Print Orders (15)
+## 🧾 Print Orders (75 total)
 
-### Quick Print Co. (6 orders)
-| Customer | Product | Details | Total | Status |
-|----------|---------|---------|-------|--------|
-| Alice Johnson | B&W Document | 45 pages × 2 copies, double-sided | $10.80 | ✅ Completed |
-| Bob Martinez | Standard Photo | 8×10 Glossy × 3 | $8.97 | ✅ Completed |
-| Carol White | B&W Document | 120 pages, single-sided | $13.20 | 🔄 In Progress |
-| David Lee | Standard Photo | 4×6 Matte × 20 | $7.00 | ⏳ Pending |
-| Emma Davis | Color Document | 45 pages × 3 copies, single-sided | $60.75 | ✅ Completed |
-| Frank Wilson | Premium Photo | 5×7 Lustre × 10 | $9.90 | ⏳ Pending |
+Orders are spread across all 12 active shops with a realistic mix of statuses:
+- **Completed**: ~40 orders
+- **In Progress**: ~15 orders
+- **Pending**: ~20 orders
 
-### Express Prints LLC (5 orders)
-| Customer | Product | Details | Total | Status |
-|----------|---------|---------|-------|--------|
-| Grace Taylor | B&W Document | 80 pages, double-sided | $7.40 | ✅ Completed |
-| Henry Brown | Standard Photo | 4×6 Glossy × 50 | $19.50 | ✅ Completed |
-| Iris Chen | Large Format Photo | 16×20 Glossy × 5 | $44.95 | 🔄 In Progress |
-| Jack Miller | B&W + Color Document | 30 pages × 2 copies | $6.00 | ⏳ Pending |
-| Kate Anderson | Large Format Photo | 20×30 Matte × 2 | $17.98 | ⏳ Pending |
-
-### City Copy Center (4 orders)
-| Customer | Product | Details | Total | Status |
-|----------|---------|---------|-------|--------|
-| Liam Garcia | B&W Document | 200 pages, double-sided | $18.50 | ✅ Completed |
-| Mia Robinson | Color Document | 15 pages, single-sided | $7.50 | ✅ Completed |
-| Noah Martinez | B&W Document | 40 pages × 4 copies | $17.60 | 🔄 In Progress |
-| Olivia Thompson | Color Document | 60 pages, double-sided | $28.80 | ⏳ Pending |
+Each order includes a simulated file path reference (e.g. `orders/alice-report.pdf`).
 
 ---
 
@@ -99,30 +156,10 @@ This document describes all demo data seeded into the Supabase database.
 | Shop (Quick Print Co.) | shop1@printhub.com | shop123 |
 | Shop (Express Prints LLC) | shop2@printhub.com | shop123 |
 
-> **Note:** Shop logins are managed in localStorage (not Supabase Auth). The shops in Supabase are linked by email.
+> **Note:** Shop logins are managed in localStorage. The shops in Supabase are linked by email.
 
 ---
 
 ## 📁 Simulated File Paths
 
-Orders reference these file paths (stored as text in `file_paths[]`):
-
-```
-orders/alice-report.pdf
-orders/bob-photo1.jpg, bob-photo2.jpg, bob-photo3.jpg
-orders/carol-thesis.pdf
-orders/david-family.zip
-orders/emma-brochure.pdf
-orders/frank-portraits.zip
-orders/grace-manual.pdf
-orders/henry-event.zip
-orders/iris-gallery.tiff
-orders/jack-forms.pdf
-orders/kate-wedding.tiff
-orders/liam-dissertation.pdf
-orders/mia-flyer.pdf
-orders/noah-handouts.pdf
-orders/olivia-catalog.pdf
-```
-
-> These are reference paths only — no actual files are stored in Supabase Storage for demo orders.
+All orders reference file paths stored in `file_paths[]` (e.g. `orders/alice-report.pdf`, `orders/bob-photo1.jpg`). These are reference strings only — no actual files are stored in Supabase Storage for demo orders.
