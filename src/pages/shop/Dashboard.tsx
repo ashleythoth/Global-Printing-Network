@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, DollarSign, CheckCircle, ArrowRight, Plus, Clock, Briefcase, Download } from 'lucide-react';
+import { Package, DollarSign, CheckCircle, ArrowRight, Plus, Clock, Briefcase, Download, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
   getProducts,
@@ -174,18 +174,37 @@ const ShopDashboard: React.FC = () => {
         />
       </div>
 
-      {/* Products quick link */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center justify-between">
-        <div>
-          <p className="font-semibold text-[#1E293B]">Product Catalog</p>
-          <p className="text-sm text-gray-500 mt-0.5">{enabledCount} enabled · {configuredCount} with pricing</p>
+      {/* Quick links */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="font-semibold text-[#1E293B]">Product Catalog</p>
+            <p className="text-sm text-gray-500 mt-0.5">{enabledCount} enabled · {configuredCount} with pricing</p>
+          </div>
+          <button
+            onClick={() => navigate('/shop/products')}
+            className="flex items-center gap-2 text-sm font-semibold text-[#2563EB] hover:text-[#1d4ed8] transition-colors"
+          >
+            Manage <ArrowRight size={15} />
+          </button>
         </div>
-        <button
-          onClick={() => navigate('/shop/products')}
-          className="flex items-center gap-2 text-sm font-semibold text-[#2563EB] hover:text-[#1d4ed8] transition-colors"
-        >
-          Manage <ArrowRight size={15} />
-        </button>
+        <div className="bg-gradient-to-r from-[#1E3A5F] to-[#2563EB] rounded-2xl p-5 shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 rounded-xl p-2.5">
+              <TrendingUp size={18} className="text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-white">Earnings & Payouts</p>
+              <p className="text-sm text-white/70 mt-0.5">${totalRevenue.toFixed(2)} gross revenue</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/shop/earnings')}
+            className="flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white transition-colors"
+          >
+            View <ArrowRight size={15} />
+          </button>
+        </div>
       </div>
 
       {showCreateModal && (

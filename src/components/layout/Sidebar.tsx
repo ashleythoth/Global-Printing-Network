@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, X, Printer, Settings } from 'lucide-react';
+import { LayoutDashboard, Store, Package, X, Printer, Settings, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +19,7 @@ const adminLinks = [
 const shopLinks = [
   { to: '/shop', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/shop/products', label: 'My Products', icon: Package, end: false },
+  { to: '/shop/earnings', label: 'Earnings', icon: TrendingUp, end: false },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {

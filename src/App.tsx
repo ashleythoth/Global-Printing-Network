@@ -16,6 +16,7 @@ import AdminSettings from "./pages/admin/Settings";
 import ShopDashboard from "./pages/shop/Dashboard";
 import ShopProducts from "./pages/shop/Products";
 import ShopPricing from "./pages/shop/Pricing";
+import ShopEarnings from "./pages/shop/Earnings";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,11 @@ const App = () => (
             <Route path="/shop/products/:productId/pricing" element={
               <ProtectedRoute requiredRole="shop">
                 <AppLayout><ShopPricing /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/shop/earnings" element={
+              <ProtectedRoute requiredRole="shop">
+                <AppLayout><ShopEarnings /></AppLayout>
               </ProtectedRoute>
             } />
 
