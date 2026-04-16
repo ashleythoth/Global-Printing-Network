@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, Package, ArrowRight, DollarSign, Clock, FileText, Camera, Loader2, Trash2 } from 'lucide-react';
+import { Store, Package, ArrowRight, DollarSign, Clock, FileText, Camera, Loader2, Trash2, TrendingUp } from 'lucide-react';
 import { fetchShops } from '@/lib/shopsService';
 import { fetchOrders, updateOrderStatus, deleteOrder, SupabaseOrder } from '@/lib/ordersService';
+import { getSetting } from '@/lib/settingsService';
 import { PrintShop } from '@/lib/types';
 import { getProducts } from '@/lib/store';
 
@@ -39,6 +40,7 @@ const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [shops, setShops] = useState<PrintShop[]>([]);
   const [orders, setOrders] = useState<SupabaseOrder[]>([]);
+  const [platformFeePct, setPlatformFeePct] = useState(10);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'active' | 'all'>('active');
 
@@ -46,9 +48,14 @@ const AdminDashboard: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
-    const [shopsData, ordersData] = await Promise.all([fetchShops(), fetchOrders()]);
+    const [shopsData, ordersData, feeSetting] = await Promise.all([
+      fetchShops(),
+      fetchOrders(),
+      getSetting('platform_fee_pct'),
+    ]);
     setShops(shopsData);
     setOrders(ordersData);
+    if (feeSetting) setPlatformFeePct(parseFloat(feeSetting));
     setLoading(false);
   };
 
@@ -57,7 +64,9 @@ const AdminDashboard: React.FC = () => {
   const activeShops = shops.filter(s => s.status === 'active').length;
   const activeProducts = products.filter(p => p.isActive).length;
   const activeOrders = orders.filter(o => o.status === 'SUBMITTED' || o.status === 'IN_PROGRESS');
-  const totalRevenue = orders.filter(o => o.status === 'COMPLETED').reduce((s, o) => s + Number(o.total_price), 0);
+  const completedOrders = orders.filter(o => o.status === 'COMPLETED');
+  const totalRevenue = completedOrders.reduce((s, o) => s + Number(o.total_price), 0);
+  const platformEarnings = totalRevenue * (platformFeePct / 100);
   const displayedOrders = activeTab === 'active' ? activeOrders : orders;
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -80,11 +89,33 @@ const AdminDashboard: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Active Shops"    value={loading ? '…' : activeShops}                    icon={<Store size={20} className="text-[#1E3A5F]" />}    bg="bg-[#1E3A5F]/10" />
-        <StatCard label="Active Products" value={loading ? '…' : activeProducts}                 icon={<Package size={20} className="text-[#2563EB]" />}  bg="bg-[#2563EB]/10" />
-        <StatCard label="Active Orders"   value={loading ? '…' : activeOrders.length}            icon={<Clock size={20} className="text-amber-500" />}    bg="bg-amber-50" />
-        <StatCard label="Total Revenue"   value={loading ? '…' : `$${totalRevenue.toFixed(0)}`} icon={<DollarSign size={20} className="text-emerald-500" />} bg="bg-emerald-50" />
+        <StatCard label="Active Shops"    value={loading ? '…' : activeShops}                         icon={<Store size={20} className="text-[#1E3A5F]" />}       bg="bg-[#1E3A5F]/10" />
+        <StatCard label="Active Products" value={loading ? '…' : activeProducts}                      icon={<Package size={20} className="text-[#2563EB]" />}     bg="bg-[#2563EB]/10" />
+        <StatCard label="Active Orders"   value={loading ? '…' : activeOrders.length}                 icon={<Clock size={20} className="text-amber-500" />}       bg="bg-amber-50" />
+        <StatCard label="Gross Revenue"   value={loading ? '…' : `$${totalRevenue.toFixed(0)}`}       icon={<DollarSign size={20} className="text-emerald-500" />} bg="bg-emerald-50" />
       </div>
+
+      {/* Platform earnings banner */}
+      {!loading && (
+        <div className="bg-gradient-to-r from-[#1E3A5F] to-[#2563EB] rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-white shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 rounded-xl p-2.5">
+              <TrendingUp size={20} className="text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white/80">Platform Earnings ({platformFeePct}% fee)</p>
+              <p className="text-3xl font-bold">${platformEarnings.toFixed(2)}</p>
+              <p className="text-xs text-white/60 mt-0.5">from {completedOrders.length} completed orders · ${totalRevenue.toFixed(2)} gross</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/admin/settings')}
+            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shrink-0"
+          >
+            Adjust Fee <ArrowRight size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Orders table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

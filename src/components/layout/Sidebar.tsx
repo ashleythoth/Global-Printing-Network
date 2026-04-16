@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, X, Printer } from 'lucide-react';
+import { LayoutDashboard, Store, Package, X, Printer, Settings } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ const adminLinks = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/shops', label: 'Print Shops', icon: Store, end: false },
   { to: '/admin/products', label: 'Products', icon: Package, end: false },
+  { to: '/admin/settings', label: 'Settings', icon: Settings, end: false },
 ];
 
 const shopLinks = [
