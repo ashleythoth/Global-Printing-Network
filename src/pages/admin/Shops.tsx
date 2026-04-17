@@ -1,14 +1,57 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Edit2, PowerOff, Power, Trash2, X, Store, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import {
+  Plus, Edit2, PowerOff, Power, Trash2, X, Store, Loader2,
+  AlertCircle, Eye, EyeOff, DollarSign, Clock, CheckCircle,
+  TrendingUp, MapPin, Phone, Mail, ChevronDown, ChevronUp,
+} from 'lucide-react';
 import { PrintShop } from '@/lib/types';
 import { fetchShops, insertShop, patchShop, removeShop } from '@/lib/shopsService';
+import { fetchOrders, SupabaseOrder } from '@/lib/ordersService';
+import { getSetting } from '@/lib/settingsService';
+
+const SQUARE_RATE = 2.9;
+const SQUARE_FIXED = 0.30;
+
+function calcPayout(gross: number, platformPct: number) {
+  const squareFee = (gross * SQUARE_RATE) / 100 + SQUARE_FIXED;
+  const platformFee = (gross * platformPct) / 100;
+  return gross - squareFee - platformFee;
+}
+
+interface ShopStats {
+  totalOrders: number;
+  activeOrders: number;
+  completedOrders: number;
+  grossRevenue: number;
+  netPayout: number;
+}
+
+function computeStats(shopId: string, orders: SupabaseOrder[], platformPct: number): ShopStats {
+  const shopOrders = orders.filter(o => o.shop_id === shopId);
+  const completed = shopOrders.filter(o => o.status === 'COMPLETED' || o.status === 'completed');
+  const active = shopOrders.filter(o =>
+    o.status === 'SUBMITTED' || o.status === 'IN_PROGRESS' ||
+    o.status === 'pending' || o.status === 'in-progress'
+  );
+  const gross = completed.reduce((s, o) => s + Number(o.total_price), 0);
+  return {
+    totalOrders: shopOrders.length,
+    activeOrders: active.length,
+    completedOrders: completed.length,
+    grossRevenue: gross,
+    netPayout: completed.reduce((s, o) => s + calcPayout(Number(o.total_price), platformPct), 0),
+  };
+}
 
 const emptyForm = { name: '', email: '', phone: '', address: '', password: '' };
 
 const AdminShops: React.FC = () => {
   const [shops, setShops] = useState<PrintShop[]>([]);
+  const [orders, setOrders] = useState<SupabaseOrder[]>([]);
+  const [platformFeePct, setPlatformFeePct] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -21,9 +64,16 @@ const AdminShops: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      setShops(await fetchShops());
+      const [shopsData, ordersData, feeSetting] = await Promise.all([
+        fetchShops(),
+        fetchOrders(),
+        getSetting('platform_fee_pct'),
+      ]);
+      setShops(shopsData);
+      setOrders(ordersData);
+      if (feeSetting) setPlatformFeePct(parseFloat(feeSetting));
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to load shops');
+      setError(e instanceof Error ? e.message : 'Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -60,23 +110,12 @@ const AdminShops: React.FC = () => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setFormErrors(errs); return; }
-
     setSaving(true);
     try {
       if (editShop) {
-        await patchShop(editShop.id, {
-          name: form.name,
-          phone: form.phone,
-          address: form.address,
-        });
+        await patchShop(editShop.id, { name: form.name, phone: form.phone, address: form.address });
       } else {
-        await insertShop({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          address: form.address,
-          status: 'active',
-        }, form.password);
+        await insertShop({ name: form.name, email: form.email, phone: form.phone, address: form.address, status: 'active' }, form.password);
       }
       await load();
       setModalOpen(false);
@@ -91,23 +130,25 @@ const AdminShops: React.FC = () => {
     try {
       await patchShop(shop.id, { status: shop.status === 'active' ? 'inactive' : 'active' });
       await load();
-    } catch {
-      setError('Failed to update status');
-    }
+    } catch { setError('Failed to update status'); }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this print shop?')) return;
-    try {
-      await removeShop(id);
-      await load();
-    } catch {
-      setError('Failed to delete shop');
-    }
+    try { await removeShop(id); await load(); }
+    catch { setError('Failed to delete shop'); }
   };
+
+  // Summary totals across all shops
+  const totalGross = orders.filter(o => o.status === 'COMPLETED' || o.status === 'completed')
+    .reduce((s, o) => s + Number(o.total_price), 0);
+  const totalActive = orders.filter(o =>
+    o.status === 'SUBMITTED' || o.status === 'IN_PROGRESS' || o.status === 'pending' || o.status === 'in-progress'
+  ).length;
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#1E293B]">Print Shops</h1>
@@ -123,109 +164,224 @@ const AdminShops: React.FC = () => {
         </button>
       </div>
 
-      {/* Error banner */}
-      {error && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-[#F43F5E] rounded-xl px-4 py-3 text-sm">
-          <AlertCircle size={16} className="shrink-0" />
-          {error}
-          <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">
-            <X size={14} />
-          </button>
+      {/* Platform summary cards */}
+      {!loading && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-3 shadow-sm">
+            <div className="bg-[#1E3A5F]/10 rounded-xl p-2.5"><Store size={18} className="text-[#1E3A5F]" /></div>
+            <div>
+              <p className="text-2xl font-bold text-[#1E293B]">{shops.filter(s => s.status === 'active').length}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Active Shops</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-3 shadow-sm">
+            <div className="bg-amber-50 rounded-xl p-2.5"><Clock size={18} className="text-amber-500" /></div>
+            <div>
+              <p className="text-2xl font-bold text-[#1E293B]">{totalActive}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Active Orders</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-3 shadow-sm">
+            <div className="bg-emerald-50 rounded-xl p-2.5"><DollarSign size={18} className="text-emerald-500" /></div>
+            <div>
+              <p className="text-2xl font-bold text-[#1E293B]">${totalGross.toFixed(0)}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Gross Revenue</p>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-[#1E3A5F] to-[#2563EB] rounded-2xl p-5 flex items-center gap-3 shadow-sm">
+            <div className="bg-white/20 rounded-xl p-2.5"><TrendingUp size={18} className="text-white" /></div>
+            <div>
+              <p className="text-2xl font-bold text-white">${(totalGross * platformFeePct / 100).toFixed(0)}</p>
+              <p className="text-xs text-white/70 mt-0.5">Platform Earnings ({platformFeePct}%)</p>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center py-20 gap-3 text-gray-400">
-            <Loader2 size={20} className="animate-spin" />
-            <span className="text-sm">Loading shops…</span>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-[#F8FAFC] border-b border-gray-100">
-                  <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Shop</th>
-                  <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Contact</th>
-                  <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Status</th>
-                  <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Created</th>
-                  <th className="text-right px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {shops.map(shop => (
-                  <tr key={shop.id} className="hover:bg-[#F8FAFC] transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-[#1E3A5F]/10 rounded-xl flex items-center justify-center shrink-0">
-                          <Store size={16} className="text-[#1E3A5F]" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-[#1E293B]">{shop.name}</p>
-                          <p className="text-xs text-gray-400">{shop.address}</p>
-                        </div>
+      {error && (
+        <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-[#F43F5E] rounded-xl px-4 py-3 text-sm">
+          <AlertCircle size={16} className="shrink-0" />{error}
+          <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600"><X size={14} /></button>
+        </div>
+      )}
+
+      {/* Shop cards */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20 gap-3 text-gray-400">
+          <Loader2 size={20} className="animate-spin" />
+          <span className="text-sm">Loading shops…</span>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {shops.length === 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 px-6 py-12 text-center text-gray-400">
+              No print shops yet. Create one to get started.
+            </div>
+          )}
+          {shops.map(shop => {
+            const stats = computeStats(shop.id, orders, platformFeePct);
+            const isExpanded = expandedId === shop.id;
+            const shopOrders = orders.filter(o => o.shop_id === shop.id);
+
+            return (
+              <div key={shop.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                {/* Shop row */}
+                <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                  {/* Identity */}
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                      shop.status === 'active' ? 'bg-[#1E3A5F]/10' : 'bg-gray-100'
+                    }`}>
+                      <Store size={18} className={shop.status === 'active' ? 'text-[#1E3A5F]' : 'text-gray-400'} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-[#1E293B]">{shop.name}</p>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          shop.status === 'active'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {shop.status}
+                        </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-[#1E293B]">{shop.email}</p>
-                      <p className="text-xs text-gray-400">{shop.phone}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                      <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
+                        <span className="text-xs text-gray-400 flex items-center gap-1"><Mail size={10} />{shop.email}</span>
+                        <span className="text-xs text-gray-400 flex items-center gap-1"><Phone size={10} />{shop.phone}</span>
+                        <span className="text-xs text-gray-400 flex items-center gap-1"><MapPin size={10} />{shop.address}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats pills */}
+                  <div className="flex items-center gap-3 flex-wrap shrink-0">
+                    <div className="text-center px-3 py-2 bg-[#F8FAFC] rounded-xl min-w-[64px]">
+                      <p className="text-lg font-bold text-[#1E293B]">{stats.totalOrders}</p>
+                      <p className="text-xs text-gray-400">Orders</p>
+                    </div>
+                    <div className="text-center px-3 py-2 bg-amber-50 rounded-xl min-w-[64px]">
+                      <p className="text-lg font-bold text-amber-600">{stats.activeOrders}</p>
+                      <p className="text-xs text-gray-400">Active</p>
+                    </div>
+                    <div className="text-center px-3 py-2 bg-emerald-50 rounded-xl min-w-[64px]">
+                      <p className="text-lg font-bold text-emerald-600">${stats.grossRevenue.toFixed(0)}</p>
+                      <p className="text-xs text-gray-400">Gross</p>
+                    </div>
+                    <div className="text-center px-3 py-2 bg-[#1E3A5F]/10 rounded-xl min-w-[64px]">
+                      <p className="text-lg font-bold text-[#1E3A5F]">${stats.netPayout.toFixed(0)}</p>
+                      <p className="text-xs text-gray-400">Payout</p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => setExpandedId(isExpanded ? null : shop.id)}
+                      className="p-2 text-gray-400 hover:text-[#1E293B] hover:bg-gray-100 rounded-lg transition-colors"
+                      title="View orders"
+                    >
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    <button onClick={() => openEdit(shop)} className="p-2 text-gray-400 hover:text-[#2563EB] hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                      <Edit2 size={15} />
+                    </button>
+                    <button
+                      onClick={() => toggleStatus(shop)}
+                      className={`p-2 rounded-lg transition-colors ${
                         shop.status === 'active'
-                          ? 'bg-[#10B981]/10 text-[#10B981]'
-                          : 'bg-gray-100 text-gray-500'
-                      }`}>
-                        {shop.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-gray-500">
-                      {new Date(shop.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => openEdit(shop)}
-                          className="p-1.5 text-gray-400 hover:text-[#2563EB] hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 size={15} />
-                        </button>
-                        <button
-                          onClick={() => toggleStatus(shop)}
-                          className={`p-1.5 rounded-lg transition-colors ${
-                            shop.status === 'active'
-                              ? 'text-gray-400 hover:text-orange-500 hover:bg-orange-50'
-                              : 'text-gray-400 hover:text-[#10B981] hover:bg-green-50'
-                          }`}
-                          title={shop.status === 'active' ? 'Deactivate' : 'Activate'}
-                        >
-                          {shop.status === 'active' ? <PowerOff size={15} /> : <Power size={15} />}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(shop.id)}
-                          className="p-1.5 text-gray-400 hover:text-[#F43F5E] hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                          ? 'text-gray-400 hover:text-orange-500 hover:bg-orange-50'
+                          : 'text-gray-400 hover:text-emerald-500 hover:bg-green-50'
+                      }`}
+                      title={shop.status === 'active' ? 'Deactivate' : 'Activate'}
+                    >
+                      {shop.status === 'active' ? <PowerOff size={15} /> : <Power size={15} />}
+                    </button>
+                    <button onClick={() => handleDelete(shop.id)} className="p-2 text-gray-400 hover:text-[#F43F5E] hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded orders */}
+                {isExpanded && (
+                  <div className="border-t border-gray-100">
+                    {shopOrders.length === 0 ? (
+                      <p className="px-6 py-6 text-sm text-gray-400 text-center">No orders for this shop yet.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-[#F8FAFC] border-b border-gray-100">
+                              <th className="text-left px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-xs">Date</th>
+                              <th className="text-left px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-xs">Product</th>
+                              <th className="text-left px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-xs">Details</th>
+                              <th className="text-right px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-xs">Gross</th>
+                              <th className="text-right px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-xs">Shop Payout</th>
+                              <th className="text-left px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-xs">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-50">
+                            {shopOrders.map(order => {
+                              const isPhoto = order.product_print_type === 'photo';
+                              const details = isPhoto
+                                ? [order.size, order.finish, order.total_quantity ? `×${order.total_quantity}` : ''].filter(Boolean).join(' · ')
+                                : [order.total_quantity ? `${order.total_quantity} pg` : '', order.color_mode, order.sides].filter(Boolean).join(' · ');
+                              const payout = calcPayout(Number(order.total_price), platformFeePct);
+                              const isCompleted = order.status === 'COMPLETED' || order.status === 'completed';
+                              const statusLabel = {
+                                SUBMITTED: 'Submitted', submitted: 'Submitted',
+                                IN_PROGRESS: 'In Progress', 'in-progress': 'In Progress',
+                                COMPLETED: 'Completed', completed: 'Completed',
+                                CANCELLED: 'Cancelled', cancelled: 'Cancelled',
+                                pending: 'Pending',
+                              }[order.status] ?? order.status;
+                              const statusColor = isCompleted
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : order.status === 'CANCELLED' || order.status === 'cancelled'
+                                  ? 'bg-gray-100 text-gray-500'
+                                  : 'bg-amber-100 text-amber-700';
+
+                              return (
+                                <tr key={order.id} className="hover:bg-[#F8FAFC] transition-colors">
+                                  <td className="px-6 py-3.5 text-xs text-gray-500 whitespace-nowrap">
+                                    {new Date(order.created_at).toLocaleDateString()}
+                                  </td>
+                                  <td className="px-6 py-3.5 text-xs text-gray-700 font-medium">{order.product_name}</td>
+                                  <td className="px-6 py-3.5 text-xs text-gray-500">{details || '—'}</td>
+                                  <td className="px-6 py-3.5 text-right font-medium text-[#1E293B]">
+                                    ${Number(order.total_price).toFixed(2)}
+                                  </td>
+                                  <td className="px-6 py-3.5 text-right font-bold text-emerald-600">
+                                    {isCompleted ? `$${payout.toFixed(2)}` : <span className="text-gray-400 font-normal">—</span>}
+                                  </td>
+                                  <td className="px-6 py-3.5">
+                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor}`}>
+                                      {statusLabel}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                          {/* Totals row */}
+                          <tfoot>
+                            <tr className="bg-[#F8FAFC] border-t-2 border-gray-200">
+                              <td colSpan={3} className="px-6 py-3 text-sm font-bold text-[#1E293B]">Totals</td>
+                              <td className="px-6 py-3 text-right font-bold text-[#1E293B]">${stats.grossRevenue.toFixed(2)}</td>
+                              <td className="px-6 py-3 text-right font-bold text-emerald-600">${stats.netPayout.toFixed(2)}</td>
+                              <td />
+                            </tr>
+                          </tfoot>
+                        </table>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-                {shops.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
-                      No print shops yet. Create one to get started.
-                    </td>
-                  </tr>
+                    )}
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Modal */}
       {modalOpen && (
@@ -235,18 +391,14 @@ const AdminShops: React.FC = () => {
               <h2 className="text-lg font-bold text-[#1E293B]">
                 {editShop ? 'Edit Print Shop' : 'Create Print Shop'}
               </h2>
-              <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={20} />
-              </button>
+              <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
               {formErrors.submit && (
                 <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-[#F43F5E] rounded-xl px-4 py-3 text-sm">
-                  <AlertCircle size={14} className="shrink-0" />
-                  {formErrors.submit}
+                  <AlertCircle size={14} className="shrink-0" />{formErrors.submit}
                 </div>
               )}
-
               {(['name', 'email', 'phone', 'address'] as const).map(field => (
                 <div key={field}>
                   <label className="block text-sm font-medium text-[#1E293B] mb-1.5 capitalize">{field}</label>
@@ -260,7 +412,6 @@ const AdminShops: React.FC = () => {
                   {formErrors[field] && <p className="text-xs text-[#F43F5E] mt-1">{formErrors[field]}</p>}
                 </div>
               ))}
-
               {!editShop && (
                 <div>
                   <label className="block text-sm font-medium text-[#1E293B] mb-1.5">Password</label>
@@ -272,31 +423,18 @@ const AdminShops: React.FC = () => {
                       placeholder="Min. 8 characters"
                       className="w-full px-4 py-2.5 pr-11 rounded-xl border border-gray-200 text-[#1E293B] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
+                    <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                   {formErrors.password && <p className="text-xs text-[#F43F5E] mt-1">{formErrors.password}</p>}
                 </div>
               )}
-
               <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
-                >
+                <button type="button" onClick={() => setModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors">
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
+                <button type="submit" disabled={saving} className="flex-1 px-4 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                   {saving && <Loader2 size={15} className="animate-spin" />}
                   {editShop ? 'Save Changes' : 'Create Shop'}
                 </button>
