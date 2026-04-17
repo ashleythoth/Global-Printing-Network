@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
@@ -13,6 +13,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminShops from "./pages/admin/Shops";
 import AdminProducts from "./pages/admin/Products";
 import AdminSettings from "./pages/admin/Settings";
+import AdminPayouts from "./pages/admin/Payouts";
 import ShopDashboard from "./pages/shop/Dashboard";
 import ShopProducts from "./pages/shop/Products";
 import ShopPricing from "./pages/shop/Pricing";
@@ -47,6 +48,11 @@ const App = () => (
                 <AppLayout><AdminProducts /></AppLayout>
               </ProtectedRoute>
             } />
+            <Route path="/admin/payouts" element={
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout><AdminPayouts /></AppLayout>
+              </ProtectedRoute>
+            } />
             <Route path="/admin/settings" element={
               <ProtectedRoute requiredRole="admin">
                 <AppLayout><AdminSettings /></AppLayout>
@@ -75,7 +81,6 @@ const App = () => (
               </ProtectedRoute>
             } />
 
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

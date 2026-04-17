@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, CreditCard, Percent, Loader2, FileText, Camera, ChevronDown, ChevronUp, Download } from 'lucide-react';
+import { DollarSign, TrendingUp, CreditCard, Percent, Loader2, FileText, Camera, Download, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { fetchOrdersByShopId, SupabaseOrder } from '@/lib/ordersService';
 import { getAllSettings } from '@/lib/settingsService';
 import { fetchShops } from '@/lib/shopsService';
+import { fetchPayoutsByShopId, Payout } from '@/lib/payoutsService';
 
 const SQUARE_RATE = 2.9;
 const SQUARE_FIXED = 0.30;
@@ -25,30 +26,30 @@ const PERIOD_OPTIONS = [
 const ShopEarnings: React.FC = () => {
   const { currentUser } = useAuth();
   const [orders, setOrders] = useState<SupabaseOrder[]>([]);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
   const [platformFeePct, setPlatformFeePct] = useState(10);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState(0);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [supabaseShopId, setSupabaseShopId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      // Match the logged-in shop by email to get the Supabase shop ID
       const [shops, settings] = await Promise.all([fetchShops(), getAllSettings()]);
       const matched = shops.find(s => s.email === currentUser?.email);
       const shopId = matched?.id ?? currentUser?.shopId ?? '';
-      setSupabaseShopId(shopId);
 
-      const [ordersData] = await Promise.all([fetchOrdersByShopId(shopId)]);
+      const [ordersData, payoutsData] = await Promise.all([
+        fetchOrdersByShopId(shopId),
+        fetchPayoutsByShopId(shopId),
+      ]);
       setOrders(ordersData);
+      setPayouts(payoutsData);
       if (settings['platform_fee_pct']) setPlatformFeePct(parseFloat(settings['platform_fee_pct']));
       setLoading(false);
     };
     load();
   }, [currentUser]);
 
-  // Filter by period
   const filteredOrders = orders.filter(o => {
     if (period === 0) return true;
     const cutoff = new Date();
@@ -57,13 +58,16 @@ const ShopEarnings: React.FC = () => {
   });
 
   const completedOrders = filteredOrders.filter(o => o.status === 'COMPLETED' || o.status === 'completed');
-  const pendingOrders = filteredOrders.filter(o => o.status === 'SUBMITTED' || o.status === 'IN_PROGRESS' || o.status === 'pending' || o.status === 'in-progress');
+  const pendingOrders = filteredOrders.filter(o =>
+    o.status === 'SUBMITTED' || o.status === 'IN_PROGRESS' || o.status === 'pending' || o.status === 'in-progress'
+  );
 
   const grossRevenue = completedOrders.reduce((s, o) => s + Number(o.total_price), 0);
   const totalSquareFees = completedOrders.reduce((s, o) => s + calcFees(Number(o.total_price), platformFeePct).squareFee, 0);
   const totalPlatformFees = completedOrders.reduce((s, o) => s + calcFees(Number(o.total_price), platformFeePct).platformFee, 0);
-  const totalPayout = completedOrders.reduce((s, o) => s + calcFees(Number(o.total_price), platformFeePct).payout, 0);
-  const pendingValue = pendingOrders.reduce((s, o) => s + Number(o.total_price), 0);
+  const totalEarned = completedOrders.reduce((s, o) => s + calcFees(Number(o.total_price), platformFeePct).payout, 0);
+  const totalPaidOut = payouts.reduce((s, p) => s + Number(p.amount), 0);
+  const balance = totalEarned - totalPaidOut;
   const pendingPayout = pendingOrders.reduce((s, o) => s + calcFees(Number(o.total_price), platformFeePct).payout, 0);
 
   const handleExport = () => {
@@ -76,9 +80,7 @@ const ShopEarnings: React.FC = () => {
           : [`${o.total_quantity}pg`, o.color_mode, o.sides].filter(Boolean).join(' ');
         return [
           new Date(o.created_at).toLocaleDateString(),
-          o.product_name,
-          o.product_print_type,
-          details,
+          o.product_name, o.product_print_type, details,
           `$${Number(o.total_price).toFixed(2)}`,
           `$${squareFee.toFixed(2)}`,
           `$${platformFee.toFixed(2)}`,
@@ -115,16 +117,13 @@ const ShopEarnings: React.FC = () => {
           <p className="text-gray-500 mt-1">Your revenue breakdown after fees</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Period selector */}
           <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1">
             {PERIOD_OPTIONS.map(opt => (
               <button
                 key={opt.days}
                 onClick={() => setPeriod(opt.days)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-                  period === opt.days
-                    ? 'bg-[#1E3A5F] text-white shadow-sm'
-                    : 'text-gray-500 hover:text-[#1E293B]'
+                  period === opt.days ? 'bg-[#1E3A5F] text-white shadow-sm' : 'text-gray-500 hover:text-[#1E293B]'
                 }`}
               >
                 {opt.label}
@@ -164,19 +163,21 @@ const ShopEarnings: React.FC = () => {
         <div className="bg-gradient-to-br from-[#1E3A5F] to-[#2563EB] rounded-2xl p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <div className="bg-white/20 rounded-lg p-2"><TrendingUp size={16} className="text-white" /></div>
-            <span className="text-xs font-semibold text-white/70 uppercase tracking-wider">Your Payout</span>
+            <span className="text-xs font-semibold text-white/70 uppercase tracking-wider">Net Earned</span>
           </div>
-          <p className="text-2xl font-bold text-white">${totalPayout.toFixed(2)}</p>
-          <p className="text-xs text-white/60 mt-1">net after all fees</p>
+          <p className="text-2xl font-bold text-white">${totalEarned.toFixed(2)}</p>
+          <p className="text-xs text-white/60 mt-1">after all fees</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-amber-100 p-5 shadow-sm">
+        <div className={`rounded-2xl p-5 shadow-sm border ${balance > 0.01 ? 'bg-amber-50 border-amber-100' : 'bg-white border-gray-100'}`}>
           <div className="flex items-center gap-2 mb-3">
-            <div className="bg-amber-50 rounded-lg p-2"><Percent size={16} className="text-amber-500" /></div>
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pending</span>
+            <div className={`rounded-lg p-2 ${balance > 0.01 ? 'bg-amber-100' : 'bg-gray-100'}`}>
+              <Percent size={16} className={balance > 0.01 ? 'text-amber-600' : 'text-gray-400'} />
+            </div>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Balance Owed</span>
           </div>
-          <p className="text-2xl font-bold text-[#1E293B]">${pendingPayout.toFixed(2)}</p>
-          <p className="text-xs text-gray-400 mt-1">{pendingOrders.length} orders in progress</p>
+          <p className={`text-2xl font-bold ${balance > 0.01 ? 'text-amber-700' : 'text-gray-400'}`}>${balance.toFixed(2)}</p>
+          <p className="text-xs text-gray-400 mt-1">${totalPaidOut.toFixed(2)} already paid out</p>
         </div>
       </div>
 
@@ -184,35 +185,56 @@ const ShopEarnings: React.FC = () => {
       <div className="bg-[#F8FAFC] rounded-2xl border border-gray-100 p-5">
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">How your payout is calculated</p>
         <div className="flex flex-wrap gap-6 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#2563EB] shrink-0" />
-            <span className="text-gray-600">Order total (gross)</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-400">−</div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-400 shrink-0" />
-            <span className="text-gray-600">Square: {SQUARE_RATE}% + ${SQUARE_FIXED.toFixed(2)}/order</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-400">−</div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-amber-400 shrink-0" />
-            <span className="text-gray-600">Platform fee: {platformFeePct}%</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-400">=</div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
-            <span className="font-semibold text-[#1E293B]">Your payout</span>
-          </div>
+          {[
+            { color: 'bg-[#2563EB]', label: 'Order total (gross)' },
+            { color: 'bg-red-400', label: `Square: ${SQUARE_RATE}% + $${SQUARE_FIXED.toFixed(2)}/order` },
+            { color: 'bg-amber-400', label: `Platform fee: ${platformFeePct}%` },
+            { color: 'bg-emerald-500', label: 'Your net earned' },
+          ].map(({ color, label }) => (
+            <div key={label} className="flex items-center gap-2">
+              <span className={`w-3 h-3 rounded-full ${color} shrink-0`} />
+              <span className="text-gray-600">{label}</span>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Orders breakdown table */}
+      {/* Payout history */}
+      {payouts.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="font-bold text-[#1E293B]">Payout History</h2>
+            <span className="text-xs font-bold bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">
+              ${totalPaidOut.toFixed(2)} total received
+            </span>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {payouts.map(payout => (
+              <div key={payout.id} className="flex items-center justify-between px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
+                    <CheckCircle size={16} className="text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-[#1E293B]">${Number(payout.amount).toFixed(2)} received</p>
+                    {payout.note && <p className="text-xs text-gray-400 mt-0.5">{payout.note}</p>}
+                  </div>
+                </div>
+                <p className="text-sm text-gray-400">
+                  {new Date(payout.paid_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Completed orders table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-bold text-[#1E293B]">Completed Orders</h2>
           <span className="text-xs text-gray-400">{completedOrders.length} orders</span>
         </div>
-
         {completedOrders.length === 0 ? (
           <div className="px-6 py-12 text-center text-gray-400 text-sm">No completed orders in this period.</div>
         ) : (
@@ -236,12 +258,9 @@ const ShopEarnings: React.FC = () => {
                   const details = isPhoto
                     ? [order.size, order.finish, order.total_quantity ? `×${order.total_quantity}` : ''].filter(Boolean).join(' · ')
                     : [order.total_quantity ? `${order.total_quantity} pg` : '', order.color_mode, order.sides].filter(Boolean).join(' · ');
-
                   return (
                     <tr key={order.id} className="hover:bg-[#F8FAFC] transition-colors">
-                      <td className="px-6 py-4 text-gray-500 text-xs whitespace-nowrap">
-                        {new Date(order.created_at).toLocaleDateString()}
-                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-xs whitespace-nowrap">{new Date(order.created_at).toLocaleDateString()}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1.5">
                           <span className={isPhoto ? 'text-purple-500' : 'text-[#2563EB]'}>
@@ -251,30 +270,21 @@ const ShopEarnings: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-xs text-gray-500">{details || '—'}</td>
-                      <td className="px-6 py-4 text-right font-medium text-[#1E293B]">
-                        ${Number(order.total_price).toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 text-right text-xs text-red-400">
-                        −${squareFee.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 text-right text-xs text-amber-500">
-                        −${platformFee.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 text-right font-bold text-emerald-600">
-                        ${payout.toFixed(2)}
-                      </td>
+                      <td className="px-6 py-4 text-right font-medium text-[#1E293B]">${Number(order.total_price).toFixed(2)}</td>
+                      <td className="px-6 py-4 text-right text-xs text-red-400">−${squareFee.toFixed(2)}</td>
+                      <td className="px-6 py-4 text-right text-xs text-amber-500">−${platformFee.toFixed(2)}</td>
+                      <td className="px-6 py-4 text-right font-bold text-emerald-600">${payout.toFixed(2)}</td>
                     </tr>
                   );
                 })}
               </tbody>
-              {/* Totals footer */}
               <tfoot>
                 <tr className="bg-[#F8FAFC] border-t-2 border-gray-200">
                   <td colSpan={3} className="px-6 py-4 text-sm font-bold text-[#1E293B]">Totals</td>
                   <td className="px-6 py-4 text-right font-bold text-[#1E293B]">${grossRevenue.toFixed(2)}</td>
                   <td className="px-6 py-4 text-right font-bold text-red-400">−${totalSquareFees.toFixed(2)}</td>
                   <td className="px-6 py-4 text-right font-bold text-amber-500">−${totalPlatformFees.toFixed(2)}</td>
-                  <td className="px-6 py-4 text-right font-bold text-emerald-600 text-base">${totalPayout.toFixed(2)}</td>
+                  <td className="px-6 py-4 text-right font-bold text-emerald-600 text-base">${totalEarned.toFixed(2)}</td>
                 </tr>
               </tfoot>
             </table>
