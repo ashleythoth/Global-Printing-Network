@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, DollarSign, CheckCircle, ArrowRight, Plus, Clock, Briefcase, Download, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   getProducts,
   getShopProductsByShopId,
@@ -17,6 +18,7 @@ import { exportJobsToCsv } from '@/lib/exportCsv';
 
 const ShopDashboard: React.FC = () => {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const shopId = currentUser?.shopId ?? '';
   const shop = shopId ? getShopById(shopId) : null;
@@ -46,7 +48,7 @@ const ShopDashboard: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Delete this job?')) {
+    if (confirm(t('shop_dash_delete_job_confirm'))) {
       deleteJob(id);
       refreshJobs();
     }
@@ -66,54 +68,46 @@ const ShopDashboard: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#1E293B]">
-            {shop ? shop.name : 'Shop Dashboard'}
+            {shop ? shop.name : t('nav_dashboard')}
           </h1>
-          <p className="text-gray-500 mt-1">Manage your products and print jobs</p>
+          <p className="text-gray-500 mt-1">{t('shop_dash_subtitle')}</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
           className="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
         >
-          <Plus size={16} /> New Job
+          <Plus size={16} /> {t('shop_dash_new_job')}
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-3 shadow-sm">
-          <div className="bg-amber-50 rounded-xl p-2.5">
-            <Clock size={20} className="text-amber-500" />
-          </div>
+          <div className="bg-amber-50 rounded-xl p-2.5"><Clock size={20} className="text-amber-500" /></div>
           <div>
             <p className="text-2xl font-bold text-[#1E293B]">{pendingJobs.length}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Active Jobs</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('shop_dash_active_jobs')}</p>
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-3 shadow-sm">
-          <div className="bg-emerald-50 rounded-xl p-2.5">
-            <DollarSign size={20} className="text-emerald-500" />
-          </div>
+          <div className="bg-emerald-50 rounded-xl p-2.5"><DollarSign size={20} className="text-emerald-500" /></div>
           <div>
             <p className="text-2xl font-bold text-[#1E293B]">${totalRevenue.toFixed(0)}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Revenue</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('shop_dash_revenue')}</p>
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-3 shadow-sm">
-          <div className="bg-[#2563EB]/10 rounded-xl p-2.5">
-            <Briefcase size={20} className="text-[#2563EB]" />
-          </div>
+          <div className="bg-[#2563EB]/10 rounded-xl p-2.5"><Briefcase size={20} className="text-[#2563EB]" /></div>
           <div>
             <p className="text-2xl font-bold text-[#1E293B]">{jobs.length}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Total Jobs</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('shop_dash_total_jobs')}</p>
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-3 shadow-sm">
-          <div className="bg-[#10B981]/10 rounded-xl p-2.5">
-            <CheckCircle size={20} className="text-[#10B981]" />
-          </div>
+          <div className="bg-[#10B981]/10 rounded-xl p-2.5"><CheckCircle size={20} className="text-[#10B981]" /></div>
           <div>
             <p className="text-2xl font-bold text-[#1E293B]">{configuredCount}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Products Ready</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('shop_dash_products_ready')}</p>
           </div>
         </div>
       </div>
@@ -125,12 +119,10 @@ const ShopDashboard: React.FC = () => {
             <button
               onClick={() => setActiveTab('pending')}
               className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'pending'
-                  ? 'bg-white text-[#1E293B] shadow-sm'
-                  : 'text-gray-500 hover:text-[#1E293B]'
+                activeTab === 'pending' ? 'bg-white text-[#1E293B] shadow-sm' : 'text-gray-500 hover:text-[#1E293B]'
               }`}
             >
-              Active
+              {t('shop_dash_tab_active')}
               {pendingJobs.length > 0 && (
                 <span className="ml-1.5 bg-amber-100 text-amber-700 text-xs font-bold px-1.5 py-0.5 rounded-full">
                   {pendingJobs.length}
@@ -140,12 +132,10 @@ const ShopDashboard: React.FC = () => {
             <button
               onClick={() => setActiveTab('all')}
               className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'all'
-                  ? 'bg-white text-[#1E293B] shadow-sm'
-                  : 'text-gray-500 hover:text-[#1E293B]'
+                activeTab === 'all' ? 'bg-white text-[#1E293B] shadow-sm' : 'text-gray-500 hover:text-[#1E293B]'
               }`}
             >
-              All Jobs
+              {t('shop_dash_tab_all')}
             </button>
           </div>
 
@@ -155,14 +145,13 @@ const ShopDashboard: React.FC = () => {
               disabled={displayedJobs.length === 0}
               className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-[#1E293B] border border-gray-200 hover:border-gray-300 px-3 py-1.5 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <Download size={14} />
-              Export CSV
+              <Download size={14} /> {t('shop_dash_export_csv')}
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:text-[#1d4ed8] transition-colors"
             >
-              <Plus size={14} /> Add Job
+              <Plus size={14} /> {t('shop_dash_add_job')}
             </button>
           </div>
         </div>
@@ -178,14 +167,18 @@ const ShopDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center justify-between">
           <div>
-            <p className="font-semibold text-[#1E293B]">Product Catalog</p>
-            <p className="text-sm text-gray-500 mt-0.5">{enabledCount} enabled · {configuredCount} with pricing</p>
+            <p className="font-semibold text-[#1E293B]">{t('shop_dash_product_catalog')}</p>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {t('shop_dash_catalog_sub')
+                .replace('{enabled}', String(enabledCount))
+                .replace('{configured}', String(configuredCount))}
+            </p>
           </div>
           <button
             onClick={() => navigate('/shop/products')}
             className="flex items-center gap-2 text-sm font-semibold text-[#2563EB] hover:text-[#1d4ed8] transition-colors"
           >
-            Manage <ArrowRight size={15} />
+            {t('shop_dash_manage')} <ArrowRight size={15} />
           </button>
         </div>
         <div className="bg-gradient-to-r from-[#1E3A5F] to-[#2563EB] rounded-2xl p-5 shadow-sm flex items-center justify-between">
@@ -194,15 +187,17 @@ const ShopDashboard: React.FC = () => {
               <TrendingUp size={18} className="text-white" />
             </div>
             <div>
-              <p className="font-semibold text-white">Earnings & Payouts</p>
-              <p className="text-sm text-white/70 mt-0.5">${totalRevenue.toFixed(2)} gross revenue</p>
+              <p className="font-semibold text-white">{t('shop_dash_earnings')}</p>
+              <p className="text-sm text-white/70 mt-0.5">
+                {t('shop_dash_earnings_sub').replace('{revenue}', totalRevenue.toFixed(2))}
+              </p>
             </div>
           </div>
           <button
             onClick={() => navigate('/shop/earnings')}
             className="flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white transition-colors"
           >
-            View <ArrowRight size={15} />
+            {t('shop_dash_view')} <ArrowRight size={15} />
           </button>
         </div>
       </div>

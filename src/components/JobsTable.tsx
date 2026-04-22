@@ -2,10 +2,9 @@ import React from 'react';
 import { Trash2, FileText, Camera } from 'lucide-react';
 import { Job, JobStatus, PrintShop } from '@/lib/types';
 import { getProductById, getShopById } from '@/lib/store';
+import { useLanguage } from '@/context/LanguageContext';
 import JobStatusBadge from './JobStatusBadge';
 import JobFilesCell from './JobFilesCell';
-
-const STATUSES: JobStatus[] = ['pending', 'in-progress', 'completed', 'cancelled'];
 
 interface JobsTableProps {
   jobs: Job[];
@@ -29,8 +28,17 @@ function jobSummary(job: Job): string {
 }
 
 const JobsTable: React.FC<JobsTableProps> = ({ jobs, showShop = false, supabaseShops, onStatusChange, onDelete }) => {
+  const { t } = useLanguage();
+
+  const STATUSES: { value: JobStatus; label: string }[] = [
+    { value: 'pending', label: t('jobs_status_pending') },
+    { value: 'in-progress', label: t('jobs_status_in_progress') },
+    { value: 'completed', label: t('jobs_status_completed') },
+    { value: 'cancelled', label: t('jobs_status_cancelled') },
+  ];
+
   if (jobs.length === 0) {
-    return <div className="px-6 py-12 text-center text-gray-400 text-sm">No jobs found.</div>;
+    return <div className="px-6 py-12 text-center text-gray-400 text-sm">{t('jobs_no_jobs')}</div>;
   }
 
   return (
@@ -38,15 +46,15 @@ const JobsTable: React.FC<JobsTableProps> = ({ jobs, showShop = false, supabaseS
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-[#F8FAFC] border-b border-gray-100">
-            {showShop && <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Shop</th>}
-            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Customer</th>
-            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Product</th>
-            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Details</th>
-            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Files</th>
-            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Total</th>
-            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Status</th>
-            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Date</th>
-            {(onStatusChange || onDelete) && <th className="text-right px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">Actions</th>}
+            {showShop && <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">{t('jobs_col_shop')}</th>}
+            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">{t('jobs_col_customer')}</th>
+            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">{t('jobs_col_product')}</th>
+            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">{t('jobs_col_details')}</th>
+            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">{t('jobs_col_files')}</th>
+            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">{t('jobs_col_total')}</th>
+            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">{t('jobs_col_status')}</th>
+            <th className="text-left px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">{t('jobs_col_date')}</th>
+            {(onStatusChange || onDelete) && <th className="text-right px-6 py-3.5 font-semibold text-gray-500 uppercase tracking-wider text-xs">{t('jobs_col_actions')}</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
@@ -84,21 +92,13 @@ const JobsTable: React.FC<JobsTableProps> = ({ jobs, showShop = false, supabaseS
                   )}
                 </td>
 
-                <td className="px-6 py-4">
-                  <JobFilesCell files={job.files ?? []} />
-                </td>
+                <td className="px-6 py-4"><JobFilesCell files={job.files ?? []} /></td>
 
-                <td className="px-6 py-4 font-semibold text-[#1E293B]">
-                  ${job.totalCost.toFixed(2)}
-                </td>
+                <td className="px-6 py-4 font-semibold text-[#1E293B]">${job.totalCost.toFixed(2)}</td>
 
-                <td className="px-6 py-4">
-                  <JobStatusBadge status={job.status} />
-                </td>
+                <td className="px-6 py-4"><JobStatusBadge status={job.status} /></td>
 
-                <td className="px-6 py-4 text-gray-500 text-xs">
-                  {new Date(job.createdAt).toLocaleDateString()}
-                </td>
+                <td className="px-6 py-4 text-gray-500 text-xs">{new Date(job.createdAt).toLocaleDateString()}</td>
 
                 {(onStatusChange || onDelete) && (
                   <td className="px-6 py-4">
@@ -107,7 +107,7 @@ const JobsTable: React.FC<JobsTableProps> = ({ jobs, showShop = false, supabaseS
                         <select value={job.status} onChange={e => onStatusChange(job.id, e.target.value as JobStatus)}
                           className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-[#1E293B] focus:outline-none focus:ring-2 focus:ring-[#2563EB] cursor-pointer">
                           {STATUSES.map(s => (
-                            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1).replace('-', ' ')}</option>
+                            <option key={s.value} value={s.value}>{s.label}</option>
                           ))}
                         </select>
                       )}
