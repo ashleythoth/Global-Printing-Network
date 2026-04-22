@@ -44,13 +44,13 @@ serve(async (req) => {
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; background: #ffffff;">
         <div style="background: #1E3A5F; padding: 32px 40px; border-radius: 12px 12px 0 0;">
           <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">
-            🖨️ Welcome to PrintHub
+            🖨️ Welcome to Global Printing Network
           </h1>
         </div>
         <div style="padding: 32px 40px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
           <p style="color: #374151; font-size: 16px; margin: 0 0 16px;">Hi <strong>${shopName}</strong>,</p>
           <p style="color: #6b7280; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
-            Your print shop account has been created on PrintHub. You can now log in and start configuring your products and pricing.
+            Your print shop account has been created on Global Printing Network. You can now log in and start configuring your products and pricing.
           </p>
 
           <div style="background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px 24px; margin-bottom: 28px;">
@@ -72,7 +72,7 @@ serve(async (req) => {
           </p>
 
           <p style="color: #9ca3af; font-size: 13px; margin: 0;">
-            — The PrintHub Team
+            — The Global Printing Network Team
           </p>
         </div>
       </div>
@@ -87,9 +87,9 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'PrintHub <noreply@printing24-7.com>',
+        from: 'Global Printing Network <noreply@printing24-7.com>',
         to: [email],
-        subject: `Welcome to PrintHub — Your shop account is ready`,
+        subject: `Welcome to Global Printing Network — Your shop account is ready`,
         html,
       }),
     });

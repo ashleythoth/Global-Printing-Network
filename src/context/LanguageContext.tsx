@@ -13,7 +13,7 @@ const en = {
   nav_earnings: 'Earnings',
 
   // ── Login ──────────────────────────────────────────────────────────────────
-  login_title: 'PrintHub',
+  login_title: 'Global Printing Network',
   login_subtitle: 'Print Shop Management Platform',
   login_heading: 'Sign in to your account',
   login_email: 'Email address',
@@ -400,7 +400,7 @@ const es: Record<keyof typeof en, string> = {
   nav_earnings: 'Ganancias',
 
   // ── Login ──────────────────────────────────────────────────────────────────
-  login_title: 'PrintHub',
+  login_title: 'Global Printing Network',
   login_subtitle: 'Plataforma de Gestión de Imprentas',
   login_heading: 'Inicia sesión en tu cuenta',
   login_email: 'Correo electrónico',

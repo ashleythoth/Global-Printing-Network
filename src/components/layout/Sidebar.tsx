@@ -55,10 +55,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Logo */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <div className="bg-[#2563EB] rounded-lg p-1.5">
-              <Printer size={20} className="text-white" />
-            </div>
-            <span className="text-xl font-bold tracking-tight">PrintHub</span>
+            <img src="/logo.png" alt="GPN Logo" className="w-9 h-9 rounded-lg object-cover" />
+            <span className="text-sm font-bold tracking-tight leading-tight">Global Printing<br/>Network</span>
           </div>
           <button onClick={onClose} className="md:hidden text-white/60 hover:text-white">
             <X size={20} />
@@ -115,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-white/10">
-          <p className="text-xs text-white/40">PrintHub v1.0</p>
+          <p className="text-xs text-white/40">Global Printing Network v1.0</p>
         </div>
       </aside>
     </>
