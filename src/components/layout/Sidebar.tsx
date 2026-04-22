@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, X, Printer, Settings, TrendingUp, Wallet } from 'lucide-react';
+import { LayoutDashboard, Store, Package, X, Printer, Settings, TrendingUp, Wallet, Globe } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage, Language } from '@/context/LanguageContext';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -9,23 +10,30 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const adminLinks = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/admin/shops', label: 'Print Shops', icon: Store, end: false },
-  { to: '/admin/products', label: 'Products', icon: Package, end: false },
-  { to: '/admin/payouts', label: 'Payouts', icon: Wallet, end: false },
-  { to: '/admin/settings', label: 'Settings', icon: Settings, end: false },
-];
-
-const shopLinks = [
-  { to: '/shop', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/shop/products', label: 'My Products', icon: Package, end: false },
-  { to: '/shop/earnings', label: 'Earnings', icon: TrendingUp, end: false },
-];
-
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { role } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
+
+  const adminLinks = [
+    { to: '/admin', label: t('nav_dashboard'), icon: LayoutDashboard, end: true },
+    { to: '/admin/shops', label: t('nav_print_shops'), icon: Store, end: false },
+    { to: '/admin/products', label: t('nav_products'), icon: Package, end: false },
+    { to: '/admin/payouts', label: t('nav_payouts'), icon: Wallet, end: false },
+    { to: '/admin/settings', label: t('nav_settings'), icon: Settings, end: false },
+  ];
+
+  const shopLinks = [
+    { to: '/shop', label: t('nav_dashboard'), icon: LayoutDashboard, end: true },
+    { to: '/shop/products', label: t('nav_my_products'), icon: Package, end: false },
+    { to: '/shop/earnings', label: t('nav_earnings'), icon: TrendingUp, end: false },
+  ];
+
   const links = role === 'admin' ? adminLinks : shopLinks;
+
+  const languages: { code: Language; label: string; flag: string }[] = [
+    { code: 'en', label: 'EN', flag: '🇺🇸' },
+    { code: 'es', label: 'ES', flag: '🇪🇸' },
+  ];
 
   return (
     <>
@@ -79,6 +87,31 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </NavLink>
           ))}
         </nav>
+
+        {/* Language switcher */}
+        <div className="px-4 py-3 border-t border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Globe size={13} className="text-white/40" />
+            <span className="text-xs text-white/40 font-medium uppercase tracking-wider">{t('login_language')}</span>
+          </div>
+          <div className="flex gap-1.5">
+            {languages.map(lang => (
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex-1 justify-center',
+                  language === lang.code
+                    ? 'bg-[#2563EB] text-white'
+                    : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                )}
+              >
+                <span>{lang.flag}</span>
+                <span>{lang.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-white/10">
