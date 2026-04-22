@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Menu, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/context/LanguageContext';
 import Sidebar from './Sidebar';
 import { getShopById } from '@/lib/store';
 
@@ -12,6 +13,7 @@ interface AppLayoutProps {
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentUser, role, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -20,7 +22,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   };
 
   const shopName = currentUser?.shopId ? getShopById(currentUser.shopId)?.name : null;
-  const displayName = role === 'admin' ? 'Administrator' : (shopName ?? currentUser?.email ?? '');
+  const displayName = role === 'admin' ? t('layout_administrator') : (shopName ?? currentUser?.email ?? '');
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
@@ -50,14 +52,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   : 'bg-[#2563EB]/10 text-[#2563EB]'
               }`}
             >
-              {role === 'admin' ? 'Admin' : 'Print Shop'}
+              {role === 'admin' ? t('login_admin') : t('layout_print_shop')}
             </span>
             <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#F43F5E] transition-colors px-2 py-1.5 rounded-lg hover:bg-red-50"
             >
               <LogOut size={16} />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden sm:inline">{t('layout_logout')}</span>
             </button>
           </div>
         </header>

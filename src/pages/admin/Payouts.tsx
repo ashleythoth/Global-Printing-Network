@@ -169,7 +169,7 @@ const AdminPayouts: React.FC = () => {
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('payouts_pending_balance')}</span>
             </div>
             <p className="text-2xl font-bold text-[#1E293B]">${Math.max(0, totalBalance).toFixed(2)}</p>
-            <p className="text-xs text-gray-400 mt-1">across all shops</p>
+            <p className="text-xs text-gray-400 mt-1">{t('payouts_all_shops').toLowerCase()}</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
@@ -186,8 +186,8 @@ const AdminPayouts: React.FC = () => {
       {!loading && shops.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="font-bold text-[#1E293B]">Shop Balances</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Net earned vs. total paid out</p>
+            <h2 className="font-bold text-[#1E293B]">{t('payouts_shop_balances')}</h2>
+            <p className="text-xs text-gray-500 mt-0.5">{t('payouts_shop_balances_sub')}</p>
           </div>
           <div className="divide-y divide-gray-50">
             {shops.map(shop => {
@@ -222,13 +222,13 @@ const AdminPayouts: React.FC = () => {
                         <p className={`text-sm font-bold ${balance > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
                           ${Math.max(0, balance).toFixed(2)}
                         </p>
-                        <p className="text-xs text-gray-400">Balance</p>
+                        <p className="text-xs text-gray-400">{t('payouts_balance')}</p>
                       </div>
                       <button
                         onClick={e => { e.stopPropagation(); setForm(f => ({ ...f, shop_id: shop.id, amount: Math.max(0, balance).toFixed(2) })); setFormErrors({}); setModalOpen(true); }}
                         className="flex items-center gap-1.5 text-xs font-semibold bg-[#2563EB] hover:bg-[#1d4ed8] text-white px-3 py-1.5 rounded-lg transition-colors"
                       >
-                        <Plus size={12} /> Pay
+                        <Plus size={12} /> {t('payouts_pay')}
                       </button>
                       {isExpanded ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
                     </div>
@@ -283,7 +283,7 @@ const AdminPayouts: React.FC = () => {
       {/* All payouts table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-bold text-[#1E293B]">All Payout Records</h2>
+          <h2 className="font-bold text-[#1E293B]">{t('payouts_all_records')}</h2>
           <div className="flex items-center gap-2 flex-wrap">
             {/* Shop filter */}
             <select
@@ -354,7 +354,7 @@ const AdminPayouts: React.FC = () => {
               </tbody>
               <tfoot>
                 <tr className="bg-[#F8FAFC] border-t-2 border-gray-200">
-                  <td className="px-6 py-4 text-sm font-bold text-[#1E293B]">Total</td>
+                  <td className="px-6 py-4 text-sm font-bold text-[#1E293B]">{t('payouts_total')}</td>
                   <td className="px-6 py-4 text-right font-bold text-emerald-600 text-base">${totalPaid.toFixed(2)}</td>
                   <td colSpan={3} />
                 </tr>
