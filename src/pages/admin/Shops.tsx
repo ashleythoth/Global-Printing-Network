@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Edit2, PowerOff, Power, Trash2, X, Store, Loader2,
   AlertCircle, Eye, EyeOff, DollarSign, Clock, CheckCircle,
-  TrendingUp, MapPin, Phone, Mail, ChevronDown, ChevronUp,
+  TrendingUp, MapPin, Phone, Mail, ChevronDown, ChevronUp, KeyRound,
 } from 'lucide-react';
 import { PrintShop } from '@/lib/types';
-import { fetchShops, insertShop, patchShop, removeShop } from '@/lib/shopsService';
+import { fetchShops, insertShop, patchShop, removeShop, resetShopPassword } from '@/lib/shopsService';
 import { fetchOrders, SupabaseOrder } from '@/lib/ordersService';
 import { getSetting } from '@/lib/settingsService';
 
@@ -60,6 +60,15 @@ const AdminShops: React.FC = () => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
 
+  // Reset password modal
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [resetShop, setResetShop] = useState<PrintShop | null>(null);
+  const [resetPassword, setResetPassword] = useState('');
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetSaving, setResetSaving] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -93,6 +102,35 @@ const AdminShops: React.FC = () => {
     setForm({ name: shop.name, email: shop.email, phone: shop.phone, address: shop.address, password: '' });
     setFormErrors({});
     setModalOpen(true);
+  };
+
+  const openReset = (shop: PrintShop) => {
+    setResetShop(shop);
+    setResetPassword('');
+    setResetError('');
+    setResetSuccess(false);
+    setShowResetPassword(false);
+    setResetModalOpen(true);
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetShop) return;
+    if (!resetPassword.trim() || resetPassword.length < 6) {
+      setResetError('Password must be at least 6 characters.');
+      return;
+    }
+    setResetSaving(true);
+    setResetError('');
+    try {
+      await resetShopPassword(resetShop.id, resetShop.email, resetPassword);
+      setResetSuccess(true);
+      setTimeout(() => setResetModalOpen(false), 1500);
+    } catch (e: unknown) {
+      setResetError(e instanceof Error ? e.message : 'Failed to reset password');
+    } finally {
+      setResetSaving(false);
+    }
   };
 
   const validate = () => {
@@ -286,6 +324,13 @@ const AdminShops: React.FC = () => {
                       <Edit2 size={15} />
                     </button>
                     <button
+                      onClick={() => openReset(shop)}
+                      className="p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                      title="Reset Password"
+                    >
+                      <KeyRound size={15} />
+                    </button>
+                    <button
                       onClick={() => toggleStatus(shop)}
                       className={`p-2 rounded-lg transition-colors ${
                         shop.status === 'active'
@@ -363,7 +408,6 @@ const AdminShops: React.FC = () => {
                               );
                             })}
                           </tbody>
-                          {/* Totals row */}
                           <tfoot>
                             <tr className="bg-[#F8FAFC] border-t-2 border-gray-200">
                               <td colSpan={3} className="px-6 py-3 text-sm font-bold text-[#1E293B]">Totals</td>
@@ -383,7 +427,7 @@ const AdminShops: React.FC = () => {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Create/Edit Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
@@ -437,6 +481,67 @@ const AdminShops: React.FC = () => {
                 <button type="submit" disabled={saving} className="flex-1 px-4 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                   {saving && <Loader2 size={15} className="animate-spin" />}
                   {editShop ? 'Save Changes' : 'Create Shop'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Modal */}
+      {resetModalOpen && resetShop && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="bg-amber-50 rounded-xl p-2">
+                  <KeyRound size={18} className="text-amber-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-[#1E293B]">Reset Password</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">{resetShop.email}</p>
+                </div>
+              </div>
+              <button onClick={() => setResetModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleResetPassword} className="px-6 py-5 space-y-4">
+              {resetError && (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-[#F43F5E] rounded-xl px-4 py-3 text-sm">
+                  <AlertCircle size={14} className="shrink-0" />{resetError}
+                </div>
+              )}
+              {resetSuccess && (
+                <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm">
+                  <CheckCircle size={14} className="shrink-0" /> Password updated successfully!
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-[#1E293B] mb-1.5">New Password</label>
+                <div className="relative">
+                  <input
+                    type={showResetPassword ? 'text' : 'password'}
+                    value={resetPassword}
+                    onChange={e => setResetPassword(e.target.value)}
+                    placeholder="Min. 6 characters"
+                    autoFocus
+                    className="w-full px-4 py-2.5 pr-11 rounded-xl border border-gray-200 text-[#1E293B] focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                  />
+                  <button type="button" onClick={() => setShowResetPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showResetPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setResetModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors">
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetSaving || resetSuccess}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {resetSaving ? <Loader2 size={15} className="animate-spin" /> : <KeyRound size={15} />}
+                  {resetSaving ? 'Saving…' : 'Reset Password'}
                 </button>
               </div>
             </form>

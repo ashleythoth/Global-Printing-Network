@@ -1,6 +1,16 @@
 import { supabase } from '@/integrations/supabase/client';
 import { PrintShop } from './types';
 
+const USERS_KEY = 'printhub_users';
+
+function getLocalUsers(): any[] {
+  return JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+}
+
+function saveLocalUsers(users: any[]): void {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
 // Map Supabase row → PrintShop
 function rowToShop(row: Record<string, unknown>): PrintShop {
   return {
@@ -43,6 +53,20 @@ export async function insertShop(
   if (error) throw error;
   const newShop = rowToShop(data);
 
+  // Create a localStorage user so the shop can log in
+  const users = getLocalUsers();
+  const existing = users.find((u: any) => u.email === shop.email);
+  if (!existing) {
+    users.push({
+      id: newShop.id,
+      email: shop.email,
+      password,
+      role: 'shop',
+      shopId: newShop.id,
+    });
+    saveLocalUsers(users);
+  }
+
   // Send welcome email — fire and don't block on failure
   try {
     await supabase.functions.invoke('send-welcome-email', {
@@ -72,6 +96,18 @@ export async function patchShop(
     .eq('id', id);
 
   if (error) throw error;
+}
+
+export async function resetShopPassword(shopId: string, email: string, newPassword: string): Promise<void> {
+  const users = getLocalUsers();
+  const idx = users.findIndex((u: any) => u.email === email);
+  if (idx !== -1) {
+    users[idx].password = newPassword;
+  } else {
+    // User doesn't exist in localStorage yet — create them
+    users.push({ id: shopId, email, password: newPassword, role: 'shop', shopId });
+  }
+  saveLocalUsers(users);
 }
 
 export async function removeShop(id: string): Promise<void> {
