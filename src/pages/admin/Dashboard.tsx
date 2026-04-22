@@ -8,7 +8,7 @@ import { PrintShop } from '@/lib/types';
 import { getProducts } from '@/lib/store';
 import { useLanguage } from '@/context/LanguageContext';
 
-const STATUS_OPTIONS = ['SUBMITTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+const STATUS_OPTIONS = ['SUBMITTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'pending', 'ready'];
 
 const StatCard: React.FC<{ label: string; value: string | number; icon: React.ReactNode; bg: string }> = ({ label, value, icon, bg }) => (
   <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4 shadow-sm">
@@ -36,6 +36,10 @@ const AdminDashboard: React.FC = () => {
     IN_PROGRESS: { label: t('dash_status_in_progress'), color: 'text-blue-700',    bg: 'bg-blue-50 border border-blue-200',      dot: 'bg-blue-500' },
     COMPLETED:   { label: t('dash_status_completed'),   color: 'text-emerald-700', bg: 'bg-emerald-50 border border-emerald-200', dot: 'bg-emerald-500' },
     CANCELLED:   { label: t('dash_status_cancelled'),   color: 'text-gray-500',    bg: 'bg-gray-100 border border-gray-200',     dot: 'bg-gray-400' },
+    pending:     { label: t('dash_status_submitted'),   color: 'text-amber-700',   bg: 'bg-amber-50 border border-amber-200',    dot: 'bg-amber-400' },
+    ready:       { label: 'Ready',                      color: 'text-blue-700',    bg: 'bg-blue-50 border border-blue-200',      dot: 'bg-blue-500' },
+    completed:   { label: t('dash_status_completed'),   color: 'text-emerald-700', bg: 'bg-emerald-50 border border-emerald-200', dot: 'bg-emerald-500' },
+    cancelled:   { label: t('dash_status_cancelled'),   color: 'text-gray-500',    bg: 'bg-gray-100 border border-gray-200',     dot: 'bg-gray-400' },
   } as Record<string, { label: string; color: string; bg: string; dot: string }>;
 
   const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
@@ -65,7 +69,10 @@ const AdminDashboard: React.FC = () => {
 
   const activeShops = shops.filter(s => s.status === 'active').length;
   const activeProducts = products.filter(p => p.isActive).length;
-  const activeOrders = orders.filter(o => o.status === 'SUBMITTED' || o.status === 'IN_PROGRESS');
+  const activeOrders = orders.filter(o =>
+    o.status === 'SUBMITTED' || o.status === 'IN_PROGRESS' ||
+    o.status === 'pending' || o.status === 'ready'
+  );
   const completedOrders = orders.filter(o => o.status === 'COMPLETED');
   const totalRevenue = completedOrders.reduce((s, o) => s + Number(o.total_price), 0);
   const platformEarnings = totalRevenue * (platformFeePct / 100);
@@ -88,6 +95,10 @@ const AdminDashboard: React.FC = () => {
       IN_PROGRESS: t('dash_status_in_progress'),
       COMPLETED: t('dash_status_completed'),
       CANCELLED: t('dash_status_cancelled'),
+      pending: t('dash_status_submitted'),
+      ready: 'Ready',
+      completed: t('dash_status_completed'),
+      cancelled: t('dash_status_cancelled'),
     };
     return map[s] ?? s;
   };

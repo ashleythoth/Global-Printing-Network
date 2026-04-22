@@ -32,7 +32,7 @@ function computeStats(shopId: string, orders: SupabaseOrder[], platformPct: numb
   const completed = shopOrders.filter(o => o.status === 'COMPLETED' || o.status === 'completed');
   const active = shopOrders.filter(o =>
     o.status === 'SUBMITTED' || o.status === 'IN_PROGRESS' ||
-    o.status === 'pending' || o.status === 'in-progress'
+    o.status === 'pending' || o.status === 'in-progress' || o.status === 'ready'
   );
   const gross = completed.reduce((s, o) => s + Number(o.total_price), 0);
   return {
@@ -184,7 +184,8 @@ const AdminShops: React.FC = () => {
   const totalGross = orders.filter(o => o.status === 'COMPLETED' || o.status === 'completed')
     .reduce((s, o) => s + Number(o.total_price), 0);
   const totalActive = orders.filter(o =>
-    o.status === 'SUBMITTED' || o.status === 'IN_PROGRESS' || o.status === 'pending' || o.status === 'in-progress'
+    o.status === 'SUBMITTED' || o.status === 'IN_PROGRESS' ||
+    o.status === 'pending' || o.status === 'in-progress' || o.status === 'ready'
   ).length;
 
   return (
@@ -359,6 +360,7 @@ const AdminShops: React.FC = () => {
                                 COMPLETED: t('status_completed'), completed: t('status_completed'),
                                 CANCELLED: t('status_cancelled'), cancelled: t('status_cancelled'),
                                 pending: t('status_submitted'),
+                                ready: 'Ready',
                               };
                               const statusLabel = statusMap[order.status] ?? order.status;
                               const statusColor = isCompleted
