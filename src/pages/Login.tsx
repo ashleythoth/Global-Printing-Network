@@ -17,11 +17,12 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    const normalizedEmail = email.trim().toLowerCase();
     setTimeout(() => {
-      const success = login(email, password);
+      const success = login(normalizedEmail, password);
       if (success) {
         const users = JSON.parse(localStorage.getItem('printhub_users') || '[]');
-        const user = users.find((u: any) => u.email === email);
+        const user = users.find((u: any) => u.email.toLowerCase() === normalizedEmail);
         navigate(user?.role === 'admin' ? '/admin' : '/shop');
       } else {
         setError(t('login_error'));
@@ -88,6 +89,10 @@ const Login: React.FC = () => {
                 onChange={e => setEmail(e.target.value)}
                 required
                 placeholder="you@example.com"
+                autoCapitalize="none"
+                autoCorrect="off"
+                autoComplete="email"
+                spellCheck={false}
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-[#1E293B] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition"
               />
             </div>

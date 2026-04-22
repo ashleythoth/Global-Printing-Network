@@ -29,8 +29,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = (email: string, password: string): boolean => {
-    const user = getUserByEmail(email);
-    if (user && user.password === password) {
+    const user = getUserByEmail(email.trim().toLowerCase());
+    if (user && user.password === password.trim()) {
       setCurrentUser(user);
       localStorage.setItem(SESSION_KEY, user.id);
       return true;

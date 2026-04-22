@@ -231,7 +231,7 @@ seedIfEmpty();
 // Users
 export const getUsers = (): User[] => getItem<User>(KEYS.USERS);
 export const getUserByEmail = (email: string): User | undefined =>
-  getUsers().find(u => u.email === email);
+  getUsers().find(u => u.email.toLowerCase() === email.toLowerCase().trim());
 
 // Shops
 export const getShops = (): PrintShop[] => getItem<PrintShop>(KEYS.SHOPS);
