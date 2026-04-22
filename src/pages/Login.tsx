@@ -37,7 +37,7 @@ const Login: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4" style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}>
       <div className="w-full max-w-md">
         {/* Language switcher */}
         <div className="flex justify-end mb-4">

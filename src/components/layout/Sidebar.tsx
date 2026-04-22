@@ -53,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         )}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+        <div className="flex items-center justify-between px-6 border-b border-white/10" style={{ paddingTop: `calc(1.25rem + env(safe-area-inset-top))`, paddingBottom: '1.25rem' }}>
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="GPN Logo" className="w-9 h-9 rounded-lg object-cover" />
             <span className="text-sm font-bold tracking-tight leading-tight">Global Printing<br/>Network</span>

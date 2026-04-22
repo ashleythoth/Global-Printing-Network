@@ -30,7 +30,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shrink-0">
+        <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shrink-0" style={{ paddingTop: `calc(0.75rem + env(safe-area-inset-top))` }}>
           <button
             onClick={() => setSidebarOpen(true)}
             className="md:hidden text-gray-500 hover:text-gray-700 p-1"
