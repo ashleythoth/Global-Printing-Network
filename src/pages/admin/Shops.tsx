@@ -267,66 +267,70 @@ const AdminShops: React.FC = () => {
 
             return (
               <div key={shop.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${shop.status === 'active' ? 'bg-[#1E3A5F]/10' : 'bg-gray-100'}`}>
-                      <Store size={18} className={shop.status === 'active' ? 'text-[#1E3A5F]' : 'text-gray-400'} />
+                <div className="px-5 py-4 space-y-3">
+
+                  {/* Row 1: shop identity + action buttons */}
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${shop.status === 'active' ? 'bg-[#1E3A5F]/10' : 'bg-gray-100'}`}>
+                      <Store size={17} className={shop.status === 'active' ? 'text-[#1E3A5F]' : 'text-gray-400'} />
                     </div>
-                    <div className="min-w-0">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-[#1E293B]">{shop.name}</p>
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${shop.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                           {shop.status === 'active' ? t('shops_active_badge') : t('prod_inactive')}
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
-                        <span className="text-xs text-gray-400 flex items-center gap-1"><Mail size={10} />{shop.email}</span>
-                        <span className="text-xs text-gray-400 flex items-center gap-1"><Phone size={10} />{shop.phone}</span>
-                        <span className="text-xs text-gray-400 flex items-center gap-1"><MapPin size={10} />{shop.address}</span>
+                      <div className="flex flex-col gap-0.5 mt-1">
+                        <span className="text-xs text-gray-400 flex items-center gap-1"><Mail size={10} className="shrink-0" /><span className="truncate">{shop.email}</span></span>
+                        <span className="text-xs text-gray-400 flex items-center gap-1"><Phone size={10} className="shrink-0" />{shop.phone}</span>
+                        <span className="text-xs text-gray-400 flex items-center gap-1"><MapPin size={10} className="shrink-0" /><span className="truncate">{shop.address}</span></span>
                       </div>
                     </div>
+                    {/* Action buttons — always top-right */}
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <button onClick={() => setExpandedId(isExpanded ? null : shop.id)} className="p-2 text-gray-400 hover:text-[#1E293B] hover:bg-gray-100 rounded-lg transition-colors" title="View orders">
+                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
+                      <button onClick={() => openEdit(shop)} className="p-2 text-gray-400 hover:text-[#2563EB] hover:bg-blue-50 rounded-lg transition-colors" title={t('edit')}>
+                        <Edit2 size={15} />
+                      </button>
+                      <button onClick={() => openReset(shop)} className="p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title={t('shops_reset_title')}>
+                        <KeyRound size={15} />
+                      </button>
+                      <button
+                        onClick={() => toggleStatus(shop)}
+                        className={`p-2 rounded-lg transition-colors ${shop.status === 'active' ? 'text-gray-400 hover:text-orange-500 hover:bg-orange-50' : 'text-gray-400 hover:text-emerald-500 hover:bg-green-50'}`}
+                        title={shop.status === 'active' ? t('prod_inactive') : t('prod_active')}
+                      >
+                        {shop.status === 'active' ? <PowerOff size={15} /> : <Power size={15} />}
+                      </button>
+                      <button onClick={() => handleDelete(shop.id)} className="p-2 text-gray-400 hover:text-[#F43F5E] hover:bg-red-50 rounded-lg transition-colors" title={t('delete')}>
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3 flex-wrap shrink-0">
-                    <div className="text-center px-3 py-2 bg-[#F8FAFC] rounded-xl min-w-[64px]">
-                      <p className="text-lg font-bold text-[#1E293B]">{stats.totalOrders}</p>
-                      <p className="text-xs text-gray-400">{t('shops_orders')}</p>
+                  {/* Row 2: stats — always a 4-col grid, never overflows */}
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="text-center px-2 py-2 bg-[#F8FAFC] rounded-xl">
+                      <p className="text-base font-bold text-[#1E293B]">{stats.totalOrders}</p>
+                      <p className="text-xs text-gray-400 leading-tight">{t('shops_orders')}</p>
                     </div>
-                    <div className="text-center px-3 py-2 bg-amber-50 rounded-xl min-w-[64px]">
-                      <p className="text-lg font-bold text-amber-600">{stats.activeOrders}</p>
-                      <p className="text-xs text-gray-400">{t('shops_active_badge')}</p>
+                    <div className="text-center px-2 py-2 bg-amber-50 rounded-xl">
+                      <p className="text-base font-bold text-amber-600">{stats.activeOrders}</p>
+                      <p className="text-xs text-gray-400 leading-tight">{t('shops_active_badge')}</p>
                     </div>
-                    <div className="text-center px-3 py-2 bg-emerald-50 rounded-xl min-w-[64px]">
-                      <p className="text-lg font-bold text-emerald-600">${stats.grossRevenue.toFixed(0)}</p>
-                      <p className="text-xs text-gray-400">{t('shops_gross_badge')}</p>
+                    <div className="text-center px-2 py-2 bg-emerald-50 rounded-xl">
+                      <p className="text-base font-bold text-emerald-600">${stats.grossRevenue.toFixed(0)}</p>
+                      <p className="text-xs text-gray-400 leading-tight">{t('shops_gross_badge')}</p>
                     </div>
-                    <div className="text-center px-3 py-2 bg-[#1E3A5F]/10 rounded-xl min-w-[64px]">
-                      <p className="text-lg font-bold text-[#1E3A5F]">${stats.netPayout.toFixed(0)}</p>
-                      <p className="text-xs text-gray-400">{t('shops_payout_badge')}</p>
+                    <div className="text-center px-2 py-2 bg-[#1E3A5F]/10 rounded-xl">
+                      <p className="text-base font-bold text-[#1E3A5F]">${stats.netPayout.toFixed(0)}</p>
+                      <p className="text-xs text-gray-400 leading-tight">{t('shops_payout_badge')}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => setExpandedId(isExpanded ? null : shop.id)} className="p-2 text-gray-400 hover:text-[#1E293B] hover:bg-gray-100 rounded-lg transition-colors" title="View orders">
-                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
-                    <button onClick={() => openEdit(shop)} className="p-2 text-gray-400 hover:text-[#2563EB] hover:bg-blue-50 rounded-lg transition-colors" title={t('edit')}>
-                      <Edit2 size={15} />
-                    </button>
-                    <button onClick={() => openReset(shop)} className="p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title={t('shops_reset_title')}>
-                      <KeyRound size={15} />
-                    </button>
-                    <button
-                      onClick={() => toggleStatus(shop)}
-                      className={`p-2 rounded-lg transition-colors ${shop.status === 'active' ? 'text-gray-400 hover:text-orange-500 hover:bg-orange-50' : 'text-gray-400 hover:text-emerald-500 hover:bg-green-50'}`}
-                      title={shop.status === 'active' ? t('prod_inactive') : t('prod_active')}
-                    >
-                      {shop.status === 'active' ? <PowerOff size={15} /> : <Power size={15} />}
-                    </button>
-                    <button onClick={() => handleDelete(shop.id)} className="p-2 text-gray-400 hover:text-[#F43F5E] hover:bg-red-50 rounded-lg transition-colors" title={t('delete')}>
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
                 </div>
 
                 {isExpanded && (
