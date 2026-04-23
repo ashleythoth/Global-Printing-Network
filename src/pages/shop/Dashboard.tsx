@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, CheckCircle, ArrowRight, Plus, Clock, Briefcase, Download, TrendingUp, Loader2, FileText, Camera, Trash2 } from 'lucide-react';
+import { DollarSign, CheckCircle, ArrowRight, Clock, Briefcase, Download, TrendingUp, Loader2, FileText, Camera, Trash2, ClipboardList } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getShopProductsByShopId } from '@/lib/store';
 import { fetchShops } from '@/lib/shopsService';
 import { fetchOrdersByShopId, updateOrderStatus, deleteOrder, SupabaseOrder } from '@/lib/ordersService';
+import WorkOrderModal from '@/components/WorkOrderModal';
 
 const STATUS_OPTIONS = ['pending', 'ready', 'completed', 'cancelled'];
 
@@ -51,6 +52,7 @@ const ShopDashboard: React.FC = () => {
   const [orders, setOrders] = useState<SupabaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'active' | 'all'>('active');
+  const [workOrderOpen, setWorkOrderOpen] = useState<SupabaseOrder | null>(null);
 
   // localStorage-based products (for the product catalog quick link)
   const shopProducts = supabaseShopId ? getShopProductsByShopId(supabaseShopId) : [];
@@ -241,6 +243,13 @@ const ShopDashboard: React.FC = () => {
                       <td className="px-6 py-4 text-gray-500 text-xs">{new Date(order.created_at).toLocaleDateString()}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setWorkOrderOpen(order)}
+                            className="flex items-center gap-1 text-xs font-semibold text-[#1E3A5F] bg-[#1E3A5F]/10 hover:bg-[#1E3A5F]/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                            title="Work Order & Files"
+                          >
+                            <ClipboardList size={13} /> Work Order
+                          </button>
                           <select
                             value={order.status}
                             onChange={e => handleStatusChange(order.id, e.target.value)}
@@ -305,6 +314,13 @@ const ShopDashboard: React.FC = () => {
           </button>
         </div>
       </div>
+      {workOrderOpen && (
+        <WorkOrderModal
+          order={workOrderOpen}
+          shopName={shopName}
+          onClose={() => setWorkOrderOpen(null)}
+        />
+      )}
     </div>
   );
 };
