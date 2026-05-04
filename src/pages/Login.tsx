@@ -113,19 +113,6 @@ const Login: React.FC = () => {
               {loading ? t('login_loading') : t('login_submit')}
             </button>
           </form>
-
-          {/* Demo credentials */}
-          <div className="mt-6 pt-5 border-t border-gray-100">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{t('login_demo')}</p>
-            <div className="space-y-2">
-              <div className="bg-[#F8FAFC] rounded-lg px-3 py-2 text-xs text-gray-600">
-                <span className="font-semibold text-[#1E3A5F]">{t('login_admin')}:</span> admin@printhub.com / admin123
-              </div>
-              <div className="bg-[#F8FAFC] rounded-lg px-3 py-2 text-xs text-gray-600">
-                <span className="font-semibold text-[#2563EB]">{t('login_shop')}:</span> shop1@printhub.com / shop123
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
